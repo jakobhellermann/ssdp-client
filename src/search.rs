@@ -1,4 +1,4 @@
-use crate::SSDPError;
+use crate::error::{ParseSearchTargetError, SSDPError};
 use futures_timer::FutureExt;
 use romio::UdpSocket;
 use std::collections::HashMap;
@@ -6,19 +6,21 @@ use std::fmt;
 use std::io::ErrorKind::TimedOut;
 use std::net::SocketAddr;
 
-pub enum SearchTarget<'a> {
+#[derive(Eq, PartialEq)]
+/// Specify what SSDP control points to search for
+pub enum SearchTarget {
+    /// Search for all devices and services.
     All,
+    /// Search for root devices only.
     RootDevice,
-    UUID(&'a str),
-    URN(&'a str),
+    /// Search for a particular device. device-UUID specified by UPnP vendor.
+    UUID(String),
+    /// Match URN.
+    /// e.g. schemas-sonos-com:service:Queue:1
+    URN(String),
 }
-impl Default for SearchTarget<'_> {
-    fn default() -> Self {
-        SearchTarget::All
-    }
-}
-impl fmt::Display for SearchTarget<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl fmt::Display for SearchTarget {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SearchTarget::All => "ssdp:all".fmt(f),
             SearchTarget::RootDevice => "upnp:rootdevice".fmt(f),
@@ -27,27 +29,60 @@ impl fmt::Display for SearchTarget<'_> {
         }
     }
 }
+impl fmt::Debug for SearchTarget {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self, f)
+    }
+}
+impl std::str::FromStr for SearchTarget {
+    type Err = ParseSearchTargetError;
+
+    fn from_str(str: &str) -> Result<Self, Self::Err> {
+        if str == "ssdp:all" {
+            return Ok(SearchTarget::All);
+        }
+        if str == "upnp:rootdevice" {
+            return Ok(SearchTarget::RootDevice);
+        }
+        if str.starts_with("uuid:") {
+            return Ok(SearchTarget::UUID(str[4..].to_string()));
+        }
+        if str.starts_with("urn:") {
+            return Ok(SearchTarget::URN(str[3..].to_string()));
+        }
+
+        Err(ParseSearchTargetError::new())
+    }
+}
 
 #[derive(Debug)]
+/// Response given by ssdp control point
 pub struct SearchResponse {
     location: String,
-    st: String,
+    st: SearchTarget,
     usn: String,
 }
 impl SearchResponse {
-    fn new(location: String, st: String, usn: String) -> Self {
+    fn new(location: String, st: SearchTarget, usn: String) -> Self {
         Self { location, st, usn }
     }
+    /// URL of the control point
     pub fn location(&self) -> &String {
         &self.location
     }
-    pub fn st(&self) -> &String {
+    /// search target returned by the control point
+    pub fn search_target(&self) -> &SearchTarget {
         &self.st
+    }
+    /// Unique Service Name
+    pub fn usn(&self) -> &String {
+        &self.usn
     }
 }
 
+/// Search for SSDP control points within a network.
 pub async fn search(
-    search_target: SearchTarget<'_>,
+    search_target: SearchTarget,
     timeout: std::time::Duration,
 ) -> Result<Vec<SearchResponse>, SSDPError> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
@@ -75,7 +110,6 @@ MX: 3\r\n\r\n",
             Err(e) => return Err(e.into()),
         };
 
-
         let headers: HashMap<&str, &str> = text
             .split("\r\n")
             .skip(1)
@@ -93,7 +127,7 @@ MX: 3\r\n\r\n",
                 if let Some(usn) = headers.get("USN") {
                     responses.push(SearchResponse::new(
                         location.to_string(),
-                        st.to_string(),
+                        st.parse()?,
                         usn.to_string(),
                     ));
                 } else {

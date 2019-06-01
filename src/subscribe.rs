@@ -3,6 +3,9 @@ use romio::TcpStream;
 use std::io;
 use std::net::SocketAddr;
 
+/// Subscribe to a service using a callback.
+/// `addr` is the address of the control point,
+/// `endpoint` the control url path for your service, e.g. "/MediaRenderer/AVTransport/Event"
 pub async fn subscribe<'a>(
     addr: &'a SocketAddr,
     endpoint: &'a str,
