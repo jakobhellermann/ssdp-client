@@ -5,13 +5,11 @@ authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
-romio = "0.3.0-alpha.8"
-futures-preview = "0.3.0-alpha.16"
-futures-timer = "0.2.0"
-httparse = "1.3.3"
+romio = "0.3.0-alpha.9"
+futures-preview = "0.3.0-alpha.17"
+futures-timer = "0.2"
+httparse = "1.3"
+log = "0.4"
 
 [dev-dependencies]
-runtime = "0.3.0-alpha.4"
-runtime-tokio = "0.3.0-alpha.4"
-hyper = "0.12.29"
-failure = "0.1.5"
+runtime = "0.3.0-alpha.6"

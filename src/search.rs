@@ -1,5 +1,6 @@
 use crate::error::{ParseSearchTargetError, SSDPError};
 use futures_timer::FutureExt;
+use log::trace;
 use romio::UdpSocket;
 use std::collections::HashMap;
 use std::fmt;
@@ -98,6 +99,7 @@ ST: {}\r
 MX: 3\r\n\r\n",
         search_target
     );
+    trace!("write search msg to socket");
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
     let mut responses = Vec::new();
@@ -109,6 +111,7 @@ MX: 3\r\n\r\n",
             Err(e) if e.kind() == TimedOut => break Ok(responses),
             Err(e) => return Err(e.into()),
         };
+        trace!("recieved response");
 
         let headers: HashMap<&str, &str> = text
             .split("\r\n")

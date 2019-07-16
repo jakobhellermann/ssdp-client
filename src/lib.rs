@@ -4,7 +4,7 @@
     nonstandard_style,
     rust_2018_idioms,
     future_incompatible,
-    missing_debug_implementations,
+    missing_debug_implementations
 )]
 
 //! An asynchronous library for discovering, notifying and subscibing to devices and services on a network.

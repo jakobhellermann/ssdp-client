@@ -1,13 +1,12 @@
 #![feature(async_await)]
 
 use futures::io::AllowStdIo;
-use futures::{task::SpawnExt, AsyncReadExt, StreamExt};
+use futures::{AsyncReadExt, StreamExt};
 use romio::TcpListener;
-use ssdp::SSDPError;
 use std::io;
 
 #[runtime::main]
-async fn main() -> Result<(), failure::Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = ([192, 168, 2, 49], 1400).into();
     let endpoint = "/MediaRenderer/AVTransport/Event";
     let callback = "http://192.168.2.91:7878";
@@ -19,11 +18,11 @@ async fn main() -> Result<(), failure::Error> {
 
     println!("Listening on 192.168.2.91:7878");
     while let Some(stream) = incoming.next().await {
-        let mut stream = stream?;
+        let stream = stream?;
 
-        let mut stdout = AllowStrIo::new(io::stdout());
+        let mut stdout = AllowStdIo::new(io::stdout());
         stream.copy_into(&mut stdout).await?;
-        println();
+        println!();
     }
 
     Ok(())

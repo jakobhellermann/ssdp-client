@@ -27,7 +27,7 @@ TIMEOUT: Second-{}\r\n\r\n",
 
     let mut stdout = futures::io::AllowStdIo::new(io::stdout());
     let stream = TcpStream::connect(addr).await?;
-    let (mut reader, mut writer) = stream.split();
+    let (reader, mut writer) = stream.split();
     writer.write_all(msg.as_bytes()).await?;
     reader.copy_into(&mut stdout).await?;
     println!();
