@@ -15,13 +15,13 @@
 //! `UPnP` as it is used as the discovery mechanism for that standard.
 
 /// SSDP Error types
-pub mod error;
+mod error;
 /// Methods and structs for dealing with searching devices
 pub mod search;
 /// Methods and structs for dealing with subscribing to devices
 pub mod subscribe;
 
-pub use error::SSDPError;
+pub use error::Error;
 pub use search::{search, SearchTarget};
 pub use subscribe::subscribe;
 
@@ -47,6 +47,6 @@ macro_rules! parse_headers {
             })else*
         }
 
-        ($($header.ok_or(crate::SSDPError::MissingHeader(stringify!($header)))?),*)
+        ($($header.ok_or(crate::Error::MissingHeader(stringify!($header)))?),*)
     } }
 }

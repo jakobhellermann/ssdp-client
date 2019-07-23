@@ -1,11 +1,8 @@
-use std::error::Error;
-use std::fmt;
-use std::io;
-use std::str::Utf8Error;
+use std::{fmt, io, str::Utf8Error};
 
 #[derive(Debug)]
 /// The Error type
-pub enum SSDPError {
+pub enum Error {
     /// IO Error
     IO(io::Error),
     /// SSDP is not encoded properly
@@ -18,47 +15,47 @@ pub enum SSDPError {
     ParseSearchTargetError(ParseSearchTargetError),
 }
 
-impl fmt::Display for SSDPError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            SSDPError::IO(e) => write!(f, "io error: ").and(e.fmt(f)),
-            SSDPError::Utf8Error(e) => e.fmt(f),
-            SSDPError::MissingHeader(h) => write!(f, "missing header: {}", h),
-            SSDPError::InvalidHeader(h) => write!(f, "invalid header: {}", h),
-            SSDPError::ParseSearchTargetError(e) => e.fmt(f),
+            Error::IO(e) => write!(f, "io error: ").and(e.fmt(f)),
+            Error::Utf8Error(e) => e.fmt(f),
+            Error::MissingHeader(h) => write!(f, "missing header: {}", h),
+            Error::InvalidHeader(h) => write!(f, "invalid header: {}", h),
+            Error::ParseSearchTargetError(e) => e.fmt(f),
         }
     }
 }
 
-impl Error for SSDPError {
-    fn cause(&self) -> Option<&dyn Error> {
+impl std::error::Error for Error {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
         match &self {
-            SSDPError::IO(e) => Some(e),
-            SSDPError::Utf8Error(e) => Some(e),
+            Error::IO(e) => Some(e),
+            Error::Utf8Error(e) => Some(e),
             _ => None,
         }
     }
 }
 
-impl From<io::Error> for SSDPError {
+impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
-        SSDPError::IO(e)
+        Error::IO(e)
     }
 }
 
-impl From<Utf8Error> for SSDPError {
+impl From<Utf8Error> for Error {
     fn from(e: Utf8Error) -> Self {
-        SSDPError::Utf8Error(e)
+        Error::Utf8Error(e)
     }
 }
-impl From<ParseSearchTargetError> for SSDPError {
+impl From<ParseSearchTargetError> for Error {
     fn from(e: ParseSearchTargetError) -> Self {
-        SSDPError::ParseSearchTargetError(e)
+        Error::ParseSearchTargetError(e)
     }
 }
 
 #[derive(Debug)]
-/// An error returned when parsing a search target using from_str fails
+/// An error returned when parsing a search target using `from_str` fails
 pub struct ParseSearchTargetError {
     _priv: (),
 }
@@ -72,4 +69,4 @@ impl fmt::Display for ParseSearchTargetError {
         "failed to parse search target".fmt(f)
     }
 }
-impl Error for ParseSearchTargetError {}
+impl std::error::Error for ParseSearchTargetError {}

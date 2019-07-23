@@ -1,5 +1,5 @@
 use crate::parse_headers;
-use crate::SSDPError;
+use crate::Error;
 use futures::prelude::*;
 use romio::TcpStream;
 use std::net::SocketAddr;
@@ -35,7 +35,7 @@ pub async fn subscribe(
     endpoint: &str,
     callback: &str,
     timeout: u32,
-) -> Result<SubscribeResponse, SSDPError> {
+) -> Result<SubscribeResponse, Error> {
     let msg = format!(
         "SUBSCRIBE {} HTTP/1.1\r
 Host: {}\r
@@ -62,7 +62,7 @@ TIMEOUT: Second-{}\r\n\r\n",
 
     Ok(SubscribeResponse {
         sid: sid.to_string(),
-        timeout: parse_timeout(timeout).map_err(|_| SSDPError::InvalidHeader("TIMEOUT"))?,
+        timeout: parse_timeout(timeout).map_err(|_| Error::InvalidHeader("TIMEOUT"))?,
         server: server.to_string(),
     })
 }

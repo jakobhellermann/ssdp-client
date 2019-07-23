@@ -1,10 +1,10 @@
-use crate::error::{ParseSearchTargetError, SSDPError};
-use crate::parse_headers;
+use crate::{
+    error::{Error, ParseSearchTargetError},
+    parse_headers,
+};
 use futures_timer::FutureExt;
 use romio::UdpSocket;
-use std::fmt;
-use std::io::ErrorKind::TimedOut;
-use std::net::SocketAddr;
+use std::{fmt, io::ErrorKind::TimedOut, net::SocketAddr};
 
 #[derive(Eq, PartialEq)]
 /// Specify what SSDP control points to search for
@@ -85,7 +85,7 @@ pub async fn search(
     search_target: SearchTarget,
     timeout: std::time::Duration,
     mx: usize,
-) -> Result<Vec<SearchResponse>, SSDPError> {
+) -> Result<Vec<SearchResponse>, Error> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
