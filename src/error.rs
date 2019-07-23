@@ -1,30 +1,24 @@
-use std::{fmt, io, str::Utf8Error};
+use display_attr::DisplayAttr;
+use std::{io, str::Utf8Error};
 
-#[derive(Debug)]
+#[derive(Debug, DisplayAttr)]
 /// The Error type
 pub enum Error {
     /// IO Error
+    #[display(fmt = "io error: {}", _0)]
     IO(io::Error),
     /// SSDP is not encoded properly
+    #[display(fmt = "utf8 error: {}", _0)]
     Utf8Error(Utf8Error),
     /// Missing header in the SSDP Response
+    #[display(fmt = "missing header: {}", _0)]
     MissingHeader(&'static str),
     /// Invalid header in the SSDP Response
+    #[display(fmt = "invalid header: {}", _0)]
     InvalidHeader(&'static str),
     /// Malformed search target in SSDP header
+    #[display(fmt = "{}", _0)]
     ParseSearchTargetError(ParseSearchTargetError),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self {
-            Error::IO(e) => write!(f, "io error: ").and(e.fmt(f)),
-            Error::Utf8Error(e) => e.fmt(f),
-            Error::MissingHeader(h) => write!(f, "missing header: {}", h),
-            Error::InvalidHeader(h) => write!(f, "invalid header: {}", h),
-            Error::ParseSearchTargetError(e) => e.fmt(f),
-        }
-    }
 }
 
 impl std::error::Error for Error {
@@ -54,29 +48,20 @@ impl From<ParseSearchTargetError> for Error {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
 /// An error returned when parsing a search target using `from_str` fails
+#[derive(Debug, Eq, PartialEq, DisplayAttr)]
+#[display(fmt = "failed to parse urn")]
 pub struct ParseURNError;
-impl fmt::Display for ParseURNError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "failed to parse urn".fmt(f)
-    }
-}
 impl std::error::Error for ParseURNError {}
 
-#[derive(Debug, Eq, PartialEq)]
-#[allow(missing_docs)]
 /// An error returned when parsing a search target using `from_str` fails
+#[derive(Debug, Eq, PartialEq, DisplayAttr)]
 pub enum ParseSearchTargetError {
+    /// Failed to parse URN in Search Target
+    #[display(fmt = "{}", _0)]
     URN(ParseURNError),
+    /// Failed to parse Search Target
+    #[display(fmt = "failed to parse search target")]
     ST,
-}
-impl fmt::Display for ParseSearchTargetError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseSearchTargetError::ST => "failed to parse search target".fmt(f),
-            ParseSearchTargetError::URN(e) => e.fmt(f),
-        }
-    }
 }
 impl std::error::Error for ParseSearchTargetError {}
