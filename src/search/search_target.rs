@@ -1,23 +1,45 @@
 use crate::error::{ParseSearchTargetError, ParseURNError};
+use display_attr::DisplayAttr;
 use std::borrow::Cow;
-use std::fmt;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, DisplayAttr)]
 /// Specify what SSDP control points to search for
 pub enum SearchTarget<'s> {
     /// Search for all devices and services.
+    #[display(fmt = "ssdp:all")]
     All,
     /// Search for root devices only.
+    #[display(fmt = "upnp:rootdevice")]
     RootDevice,
     /// Search for a particular device. device-UUID specified by UPnP vendor.
+    #[display(fmt = "uuid:{}", _0)]
     UUID(String),
     /// e.g. schemas-upnp-org:device:ZonePlayer:1
     /// or schemas-sonos-com:service:Queue:1
+    #[display(fmt = "{}", _0)]
     URN(URN<'s>),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+impl std::str::FromStr for SearchTarget<'_> {
+    type Err = ParseSearchTargetError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "ssdp:all" => SearchTarget::All,
+            "upnp:rootdevice" => SearchTarget::RootDevice,
+            s if s.starts_with("uuid") => {
+                SearchTarget::UUID(s.trim_start_matches("uuid:").to_string())
+            }
+            s => URN::from_str(s)
+                .map(SearchTarget::URN)
+                .map_err(ParseSearchTargetError::URN)?,
+        })
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, DisplayAttr)]
 #[allow(missing_docs)]
+#[display(fmt = "urn:{}:{}:{}:{}", domain, urn_type, type_, version)]
 /// Uniform Resource Name
 pub struct URN<'s> {
     pub domain: Cow<'s, str>,
@@ -26,97 +48,42 @@ pub struct URN<'s> {
     pub version: u32,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+impl std::str::FromStr for URN<'_> {
+    type Err = ParseURNError;
+    #[rustfmt::skip]
+    fn from_str(str: &str) -> Result<Self, Self::Err> {
+        let mut iter = str.split(':');
+        if iter.next() != Some("urn") { return Err(ParseURNError); }
+
+        let domain = iter.next().ok_or(ParseURNError)?.to_string();
+        let urn_type = iter.next().ok_or(ParseURNError)?.parse()?;
+        let type_ = iter.next().ok_or(ParseURNError)?.to_string();
+        let version = iter.next().ok_or(ParseURNError)?
+            .parse::<u32>().map_err(|_| ParseURNError)?;
+
+        if iter.next() != None { return Err(ParseURNError); }
+
+        Ok(URN { domain: domain.into(), urn_type, type_: type_.into(), version })
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, DisplayAttr)]
 #[allow(missing_docs)]
 pub enum URNType {
+    #[display(fmt = "service")]
     Service,
+    #[display(fmt = "device")]
     Device,
 }
 
-impl fmt::Display for URN<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "urn:{}:{}:{}:{}",
-            self.domain, self.urn_type, self.type_, self.version
-        )
-    }
-}
-impl fmt::Display for URNType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            URNType::Service => "service".fmt(f),
-            URNType::Device => "device".fmt(f),
-        }
-    }
-}
-impl fmt::Display for SearchTarget<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            SearchTarget::All => "ssdp:all".fmt(f),
-            SearchTarget::RootDevice => "upnp:rootdevice".fmt(f),
-            SearchTarget::UUID(uuid) => write!(f, "uuid:{}", uuid),
-            SearchTarget::URN(urn) => write!(f, "{}", urn),
-        }
-    }
-}
-
-impl std::str::FromStr for URN<'_> {
+impl std::str::FromStr for URNType {
     type Err = ParseURNError;
-
-    fn from_str(str: &str) -> Result<Self, Self::Err> {
-        let mut iter = str.split(':');
-        if iter.next() != Some("urn") {
-            return Err(ParseURNError);
-        }
-
-        let domain = iter.next().ok_or(ParseURNError)?.to_string();
-        let device_or_service = iter.next().ok_or(ParseURNError)?;
-        let type_ = iter.next().ok_or(ParseURNError)?.to_string();
-        let version = iter
-            .next()
-            .ok_or(ParseURNError)?
-            .parse::<u32>()
-            .map_err(|_| ParseURNError)?;
-
-        if iter.next() != None {
-            return Err(ParseURNError);
-        }
-
-        let urn_type = match device_or_service {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
             "device" => Ok(URNType::Device),
             "service" => Ok(URNType::Service),
             _ => Err(ParseURNError),
-        }?;
-
-        Ok(URN {
-            domain: Cow::Owned(domain),
-            urn_type,
-            type_: Cow::Owned(type_),
-            version,
-        })
-    }
-}
-
-impl std::str::FromStr for SearchTarget<'_> {
-    type Err = ParseSearchTargetError;
-
-    fn from_str(str: &str) -> Result<Self, Self::Err> {
-        if str == "ssdp:all" {
-            return Ok(SearchTarget::All);
         }
-        if str == "upnp:rootdevice" {
-            return Ok(SearchTarget::RootDevice);
-        }
-        if str.starts_with("uuid:") {
-            return Ok(SearchTarget::UUID(
-                str.trim_start_matches("uuid:").to_string(),
-            ));
-        }
-
-        URN::from_str(str)
-            .map(SearchTarget::URN)
-            .map_err(ParseSearchTargetError::URN)
     }
 }
 
