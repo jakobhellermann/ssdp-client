@@ -54,7 +54,7 @@ impl From<ParseSearchTargetError> for Error {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 /// An error returned when parsing a search target using `from_str` fails
 pub struct ParseSearchTargetError {
     _priv: (),

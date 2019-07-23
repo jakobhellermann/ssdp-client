@@ -1,6 +1,7 @@
 #![feature(async_await, bind_by_move_pattern_guards)]
-#![deny(missing_docs, unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(
+    missing_docs,
     nonstandard_style,
     rust_2018_idioms,
     future_incompatible,

@@ -15,17 +15,23 @@ pub enum SearchTarget {
     RootDevice,
     /// Search for a particular device. device-UUID specified by UPnP vendor.
     UUID(String),
-    /// Match URN.
+    /// e.g. schemas-upnp-org:device:ZonePlayer:1
+    DeviceURN(String, String, u32),
     /// e.g. schemas-sonos-com:service:Queue:1
-    URN(String),
+    ServiceURN(String, String, u32),
 }
 impl fmt::Display for SearchTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SearchTarget::All => "ssdp:all".fmt(f),
             SearchTarget::RootDevice => "upnp:rootdevice".fmt(f),
-            SearchTarget::UUID(uuid) => write!(f, "uuid:").and(write!(f, "{}", uuid)),
-            SearchTarget::URN(urn) => write!(f, "urn:").and(write!(f, "{}", urn)),
+            SearchTarget::UUID(uuid) => write!(f, "uuid:{}", uuid),
+            SearchTarget::DeviceURN(domain, type_, ver) => {
+                write!(f, "urn:{}:device:{}:{}", domain, type_, ver)
+            }
+            SearchTarget::ServiceURN(domain, type_, ver) => {
+                write!(f, "urn:{}:service:{}:{}", domain, type_, ver)
+            }
         }
     }
 }
@@ -45,13 +51,40 @@ impl std::str::FromStr for SearchTarget {
             return Ok(SearchTarget::RootDevice);
         }
         if str.starts_with("uuid:") {
-            return Ok(SearchTarget::UUID(str[4..].to_string()));
-        }
-        if str.starts_with("urn:") {
-            return Ok(SearchTarget::URN(str[3..].to_string()));
+            return Ok(SearchTarget::UUID(
+                str.trim_start_matches("uuid:").to_string(),
+            ));
         }
 
-        Err(ParseSearchTargetError::new())
+        let mut iter = str.split(':');
+        if iter.next() != Some("urn") {
+            return Err(ParseSearchTargetError::new());
+        }
+
+        let domain = iter
+            .next()
+            .ok_or(ParseSearchTargetError::new())?
+            .to_string();
+        let device_or_service = iter.next().ok_or(ParseSearchTargetError::new())?;
+        let type_ = iter
+            .next()
+            .ok_or(ParseSearchTargetError::new())?
+            .to_string();
+        let version = iter
+            .next()
+            .ok_or(ParseSearchTargetError::new())?
+            .parse::<u32>()
+            .map_err(|_| ParseSearchTargetError::new())?;
+
+        if iter.next() != None {
+            return Err(ParseSearchTargetError::new());
+        }
+
+        match device_or_service {
+            "device" => Ok(SearchTarget::DeviceURN(domain, type_, version)),
+            "service" => Ok(SearchTarget::ServiceURN(domain, type_, version)),
+            _ => Err(ParseSearchTargetError::new()),
+        }
     }
 }
 
@@ -119,5 +152,38 @@ MX: {}\r\n\r\n",
             st: st.parse()?,
             usn: usn.to_string(),
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SearchTarget;
+
+    #[test]
+    fn parse_search_target() {
+        assert_eq!("ssdp:all".parse(), Ok(SearchTarget::All));
+        assert_eq!("upnp:rootdevice".parse(), Ok(SearchTarget::RootDevice));
+
+        assert_eq!(
+            "uuid:some-uuid".parse(),
+            Ok(SearchTarget::UUID("some-uuid".to_string()))
+        );
+
+        assert_eq!(
+            "urn:schemas-upnp-org:device:ZonePlayer:1".parse(),
+            Ok(SearchTarget::DeviceURN(
+                "schemas-upnp-org".into(),
+                "ZonePlayer".into(),
+                1
+            ))
+        );
+        assert_eq!(
+            "urn:schemas-sonos-com:service:Queue:2".parse(),
+            Ok(SearchTarget::ServiceURN(
+                "schemas-sonos-com".into(),
+                "Queue".into(),
+                2
+            ))
+        );
     }
 }
