@@ -79,9 +79,12 @@ impl SearchResponse {
 }
 
 /// Search for SSDP control points within a network.
+/// Control Points will wait a random amount of time between 0 and mx seconds before responing to avoid flooding the requester with responses.
+/// Therefore, the timeout should be at least mx seconds.
 pub async fn search(
     search_target: SearchTarget,
     timeout: std::time::Duration,
+    mx: usize,
 ) -> Result<Vec<SearchResponse>, SSDPError> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
@@ -93,8 +96,8 @@ pub async fn search(
 Host:239.255.255.250:1900\r
 Man:\"ssdp:discover\"\r
 ST: {}\r
-MX: 3\r\n\r\n",
-        search_target
+MX: {}\r\n\r\n",
+        search_target, mx
     );
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 

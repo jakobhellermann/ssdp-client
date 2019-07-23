@@ -6,7 +6,9 @@ use std::time::Duration;
 
 #[runtime::main]
 async fn main() -> Result<(), SSDPError> {
-    let responses = ssdp::search(SearchTarget::RootDevice, Duration::from_secs(1)).await?;
+    let search_target = SearchTarget::RootDevice;
+    let timeout = Duration::from_secs(3);
+    let responses = ssdp::search(search_target, timeout, 2).await?;
 
     for response in responses {
         println!("{:?}", response);
