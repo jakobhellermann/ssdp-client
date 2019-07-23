@@ -1,8 +1,8 @@
 use crate::error::{ParseSearchTargetError, SSDPError};
+use crate::parse_headers;
 use futures_timer::FutureExt;
 use log::trace;
 use romio::UdpSocket;
-use std::collections::HashMap;
 use std::fmt;
 use std::io::ErrorKind::TimedOut;
 use std::net::SocketAddr;
@@ -65,9 +65,6 @@ pub struct SearchResponse {
 }
 
 impl SearchResponse {
-    fn new(location: String, st: SearchTarget, usn: String) -> Self {
-        Self { location, st, usn }
-    }
     /// URL of the control point
     pub fn location(&self) -> &String {
         &self.location
@@ -108,40 +105,19 @@ MX: 3\r\n\r\n",
     loop {
         let mut buf = [0u8; 1024];
         let text = match socket.recv_from(&mut buf).timeout(timeout).await {
+            Ok((read, _)) if read == 2014 => unimplemented!(), // TODO
             Ok((read, _)) => std::str::from_utf8(&buf[..read])?,
             Err(e) if e.kind() == TimedOut => break Ok(responses),
             Err(e) => return Err(e.into()),
         };
         trace!("recieved response");
 
-        let headers: HashMap<&str, &str> = text
-            .split("\r\n")
-            .skip(1)
-            .filter_map(|l| {
-                let mut split = l.splitn(2, ':');
-                match (split.next(), split.next()) {
-                    (Some(header), Some(value)) => Some((header, value.trim())),
-                    _ => None,
-                }
-            })
-            .collect();
+        let (location, st, usn) = parse_headers!(text => location, st, usn);
 
-        if let Some(location) = headers.get("LOCATION") {
-            if let Some(st) = headers.get("ST") {
-                if let Some(usn) = headers.get("USN") {
-                    responses.push(SearchResponse::new(
-                        location.to_string(),
-                        st.parse()?,
-                        usn.to_string(),
-                    ));
-                } else {
-                    return Err(SSDPError::MissingHeader("USN"));
-                }
-            } else {
-                return Err(SSDPError::MissingHeader("ST"));
-            }
-        } else {
-            return Err(SSDPError::MissingHeader("LOCATION"));
-        }
+        responses.push(SearchResponse {
+            location: location.to_string(),
+            st: st.parse()?,
+            usn: usn.to_string(),
+        });
     }
 }

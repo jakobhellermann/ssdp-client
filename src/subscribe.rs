@@ -1,3 +1,4 @@
+use crate::parse_headers;
 use crate::SSDPError;
 use futures::prelude::*;
 use romio::TcpStream;
@@ -29,10 +30,10 @@ impl SubscribeResponse {
 /// Subscribe to a service using a callback.
 /// `addr` is the address of the control point,
 /// `endpoint` the control url path for your service, e.g. "/MediaRenderer/AVTransport/Event"
-pub async fn subscribe<'a>(
-    addr: &'a SocketAddr,
-    endpoint: &'a str,
-    callback: &'a str,
+pub async fn subscribe(
+    addr: &SocketAddr,
+    endpoint: &str,
+    callback: &str,
     timeout: u32,
 ) -> Result<SubscribeResponse, SSDPError> {
     let msg = format!(
@@ -55,38 +56,13 @@ TIMEOUT: Second-{}\r\n\r\n",
     let mut buf = Vec::new();
     reader.read_to_end(&mut buf).await?;
 
-    let s = String::from_utf8(buf).map_err(|e| e.utf8_error())?;
+    let response = String::from_utf8(buf).map_err(|e| e.utf8_error())?;
 
-    let mut response = s.split("\r\n");
-    assert_eq!(response.next(), Some("HTTP/1.1 200 OK")); // TODO
-
-    let mut sid: Option<&str> = None;
-    let mut server: Option<&str> = None;
-    let mut timeout: Option<&str> = None;
-
-    for (header, value) in response.filter_map(|l| {
-        let mut split = l.splitn(2, ':');
-        match (split.next(), split.next()) {
-            (Some(header), Some(value)) => Some((header, value.trim())),
-            _ => None,
-        }
-    }) {
-        if header.eq_ignore_ascii_case("server") {
-            server = Some(value);
-        } else if header.eq_ignore_ascii_case("sid") {
-            sid = Some(value);
-        } else if header.eq_ignore_ascii_case("timeout") {
-            timeout = Some(value);
-        }
-    }
+    let (sid, timeout, server) = parse_headers!(response => sid, timeout, server);
 
     Ok(SubscribeResponse {
-        sid: sid.ok_or(SSDPError::MissingHeader("SID"))?.to_string(),
-        timeout: timeout
-            .ok_or(SSDPError::MissingHeader("TIMEOUT"))?
-            .to_string(),
-        server: server
-            .ok_or(SSDPError::MissingHeader("SERVER"))?
-            .to_string(),
+        sid: sid.to_string(),
+        timeout: timeout.to_string(),
+        server: server.to_string(),
     })
 }

@@ -24,3 +24,29 @@ pub mod subscribe;
 pub use error::SSDPError;
 pub use search::{search, SearchTarget};
 pub use subscribe::subscribe;
+
+#[macro_export]
+#[doc(hidden)]
+// todo: figure out how to import wihtout macro_export
+macro_rules! parse_headers {
+    ( $response:expr => $($header:ident),+ ) => { {
+        let mut response = $response.split("\r\n");
+        assert_eq!(response.next(), Some("HTTP/1.1 200 OK")); // TODO
+        let headers = response.filter_map(|l| {
+            let mut split = l.splitn(2, ':');
+            match (split.next(), split.next()) {
+                (Some(header), Some(value)) => Some((header, value.trim())),
+                _ => None,
+            }
+        });
+        $(let mut $header: Option<&str> = None;)*
+
+        for (header, value) in headers {
+            $(if header.eq_ignore_ascii_case(stringify!($header)) {
+                $header = Some(value);
+            })else*
+        }
+
+        ($($header.ok_or(crate::SSDPError::MissingHeader(stringify!($header)))?),*)
+    } }
+}
