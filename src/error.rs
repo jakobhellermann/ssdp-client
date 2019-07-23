@@ -56,17 +56,27 @@ impl From<ParseSearchTargetError> for Error {
 
 #[derive(Debug, Eq, PartialEq)]
 /// An error returned when parsing a search target using `from_str` fails
-pub struct ParseSearchTargetError {
-    _priv: (),
-}
-impl ParseSearchTargetError {
-    pub(crate) fn new() -> Self {
-        Self { _priv: () }
+pub struct ParseURNError;
+impl fmt::Display for ParseURNError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        "failed to parse urn".fmt(f)
     }
+}
+impl std::error::Error for ParseURNError {}
+
+#[derive(Debug, Eq, PartialEq)]
+#[allow(missing_docs)]
+/// An error returned when parsing a search target using `from_str` fails
+pub enum ParseSearchTargetError {
+    URN(ParseURNError),
+    ST,
 }
 impl fmt::Display for ParseSearchTargetError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "failed to parse search target".fmt(f)
+        match self {
+            ParseSearchTargetError::ST => "failed to parse search target".fmt(f),
+            ParseSearchTargetError::URN(e) => e.fmt(f),
+        }
     }
 }
 impl std::error::Error for ParseSearchTargetError {}

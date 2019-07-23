@@ -16,7 +16,7 @@
 //! `UPnP` as it is used as the discovery mechanism for that standard.
 
 /// SSDP Error types
-mod error;
+pub mod error;
 /// Methods and structs for dealing with searching devices
 pub mod search;
 /// Methods and structs for dealing with subscribing to devices
