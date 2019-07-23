@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let endpoint = "/MediaRenderer/AVTransport/Event";
     let callback = "http://192.168.2.91:7878";
     let timeout = 50;
-    let response = ssdp::subscribe(&addr, endpoint, callback, timeout).await?;
+    let response = ssdp_client::subscribe(&addr, endpoint, callback, timeout).await?;
     println!(
         "SID {} from {} with {}",
         response.sid(),
