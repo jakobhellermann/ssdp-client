@@ -1,7 +1,6 @@
 use crate::error::{ParseSearchTargetError, SSDPError};
 use crate::parse_headers;
 use futures_timer::FutureExt;
-use log::trace;
 use romio::UdpSocket;
 use std::fmt;
 use std::io::ErrorKind::TimedOut;
@@ -97,7 +96,6 @@ ST: {}\r
 MX: 3\r\n\r\n",
         search_target
     );
-    trace!("write search msg to socket");
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
     let mut responses = Vec::new();
@@ -110,7 +108,6 @@ MX: 3\r\n\r\n",
             Err(e) if e.kind() == TimedOut => break Ok(responses),
             Err(e) => return Err(e.into()),
         };
-        trace!("recieved response");
 
         let (location, st, usn) = parse_headers!(text => location, st, usn);
 
