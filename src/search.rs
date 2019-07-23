@@ -63,16 +63,16 @@ impl std::str::FromStr for SearchTarget {
 
         let domain = iter
             .next()
-            .ok_or(ParseSearchTargetError::new())?
+            .ok_or_else(ParseSearchTargetError::new)?
             .to_string();
-        let device_or_service = iter.next().ok_or(ParseSearchTargetError::new())?;
+        let device_or_service = iter.next().ok_or_else(ParseSearchTargetError::new)?;
         let type_ = iter
             .next()
-            .ok_or(ParseSearchTargetError::new())?
+            .ok_or_else(ParseSearchTargetError::new)?
             .to_string();
         let version = iter
             .next()
-            .ok_or(ParseSearchTargetError::new())?
+            .ok_or_else(ParseSearchTargetError::new)?
             .parse::<u32>()
             .map_err(|_| ParseSearchTargetError::new())?;
 
