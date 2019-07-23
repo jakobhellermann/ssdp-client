@@ -12,6 +12,8 @@ pub enum SSDPError {
     Utf8Error(Utf8Error),
     /// Missing header in the SSDP Response
     MissingHeader(&'static str),
+    /// Invalid header in the SSDP Response
+    InvalidHeader(&'static str),
     /// Malformed search target in SSDP header
     ParseSearchTargetError(ParseSearchTargetError),
 }
@@ -22,6 +24,7 @@ impl fmt::Display for SSDPError {
             SSDPError::IO(e) => write!(f, "io error: ").and(e.fmt(f)),
             SSDPError::Utf8Error(e) => e.fmt(f),
             SSDPError::MissingHeader(h) => write!(f, "missing header: {}", h),
+            SSDPError::InvalidHeader(h) => write!(f, "invalid header: {}", h),
             SSDPError::ParseSearchTargetError(e) => e.fmt(f),
         }
     }

@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 #[derive(Debug)]
 pub struct SubscribeResponse {
     sid: String,
-    timeout: String,
+    timeout: u64,
     server: String,
 }
 
@@ -18,8 +18,8 @@ impl SubscribeResponse {
         &self.sid
     }
     /// timeout for subscription
-    pub fn timeout(&self) -> &str {
-        &self.timeout
+    pub fn timeout(&self) -> u64 {
+        self.timeout
     }
     /// basically a user-agent
     pub fn server(&self) -> &str {
@@ -62,7 +62,11 @@ TIMEOUT: Second-{}\r\n\r\n",
 
     Ok(SubscribeResponse {
         sid: sid.to_string(),
-        timeout: timeout.to_string(),
+        timeout: parse_timeout(timeout).map_err(|_| SSDPError::InvalidHeader("TIMEOUT"))?,
         server: server.to_string(),
     })
+}
+
+fn parse_timeout(timeout: &str) -> Result<u64, std::num::ParseIntError> {
+    timeout.trim_start_matches("Second-").parse()
 }
