@@ -106,7 +106,7 @@ MX: {}\r\n\r\n",
     loop {
         let mut buf = [0u8; 1024];
         let text = match socket.recv_from(&mut buf).timeout(timeout).await {
-            Ok((read, _)) if read == 2014 => unimplemented!(), // TODO
+            Ok((read, _)) if read == 1024 => unimplemented!(), // TODO
             Ok((read, _)) => std::str::from_utf8(&buf[..read])?,
             Err(e) if e.kind() == TimedOut => break Ok(responses),
             Err(e) => return Err(e.into()),
