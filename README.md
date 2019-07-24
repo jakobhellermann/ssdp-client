@@ -10,7 +10,7 @@ distributes messages across a local network for devices and services to
 discover each other. SSDP can most commonly be found in devices that implement
 `UPnP` as it is used as the discovery mechanism for that standard.
 
-**Technical Spefification:**
+**Technical Specification:**
 http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v2.0.pdf
 
 License

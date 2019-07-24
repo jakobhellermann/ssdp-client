@@ -3,7 +3,7 @@ name = "ssdp-client"
 version = "0.3.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 description = "An asynchronous library for discovering, notifying and subscribing to devices and services on a network."
-categories = ["Asynchronous", "Network Programming"]
+categories = ["network-programming", "asynchronous"]
 keywords = ["async", "ssdp", "networking", "protocols"]
 repository = "https://github.com/jjakobh/ssdp-client"
 documentation = "https://docs.rs/ssdp-client"
@@ -13,7 +13,6 @@ edition = "2018"
 
 [badges]
 travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
-maintainance = { status = "active" }
 
 [dependencies]
 romio = "0.3.0-alpha.9"
