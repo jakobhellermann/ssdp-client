@@ -7,11 +7,14 @@ use std::io;
 
 #[runtime::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let addr = ([192, 168, 2, 49], 1400).into();
-    let endpoint = "/MediaRenderer/AVTransport/Event";
-    let callback = "http://192.168.2.91:7878";
-    let timeout = 50;
-    let response = ssdp_client::subscribe(&addr, endpoint, callback, timeout).await?;
+    let control_point = ([192, 168, 2, 49], 1400).into();
+    let response = ssdp_client::subscribe(
+        &control_point,
+        "/MediaRenderer/AVTransport/Event",
+        "http://192.168.2.91:7878", // localhost:7878
+        10,
+    ).await?;
+
     println!(
         "SID {} from {} with {}",
         response.sid(),
@@ -19,10 +22,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         response.timeout()
     );
 
-    let mut listener = TcpListener::bind(&"192.168.2.91:7878".parse().unwrap())?;
+    let addr = ([192, 168, 2, 91], 7878).into();
+    let mut listener = TcpListener::bind(&addr)?;
     let mut incoming = listener.incoming();
 
-    println!("Listening on 192.168.2.91:7878");
+    println!("Listening on {}", addr);
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
         let mut stdout = AllowStdIo::new(io::stdout());

@@ -12,7 +12,7 @@ pub struct SubscribeResponse {
 }
 
 impl SubscribeResponse {
-    /// unique subscription identifier
+    /// unique Subscription Identifier
     pub fn sid(&self) -> &str {
         &self.sid
     }

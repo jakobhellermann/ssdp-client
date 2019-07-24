@@ -18,10 +18,59 @@
 /// SSDP Error types
 pub mod error;
 /// Methods and structs for dealing with searching devices
+/// # Example
+/// ```rust,norun
+/// # #![feature(async_await)]
+/// # async fn f() -> Result<(), ssdp_client::Error> {
+/// # use std::time::Duration;
+/// # use ssdp_client::SearchTarget;
+/// let search_target = "urn:schemas-upnp-org:device:ZonePlayer:1".parse().unwrap();
+/// // let search_target = SearchTarget::RootDevice;
+/// let responses = ssdp_client::search(search_target, Duration::from_secs(3), 2).await?;
+///
+/// for response in responses {
+///     println!("{:?}", response);
+/// }
+/// # return Ok(());
+/// # }
+/// ```
 pub mod search;
 /// Methods and structs for dealing with subscribing to devices
+/// # Example
+/// ```rust,norun
+/// # #![feature(async_await)]
+/// # use futures::{StreamExt, io::AllowStdIo};
+/// # use romio::TcpListener;
+/// # use std::io;
+/// # async fn f() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+/// let control_point = ([192, 168, 2, 49], 1400).into();
+/// let response = ssdp_client::subscribe(
+///     &control_point,
+///     "/MediaRenderer/AVTransport/Event",
+///     "http://192.168.2.94:7878", // localhost:7878
+///     60
+/// ).await?;
+/// 
+/// println!(
+///     "SID {} from {} with {}",
+///     response.sid(),
+///     response.server(),
+///     response.timeout()
+/// );
+/// 
+/// let mut listener = TcpListener::bind(&"192.168.2.91:7878".parse().unwrap())?;
+/// let mut incoming = listener.incoming();
+/// 
+/// println!("Listening on 192.168.2.91:7878");
+/// while let Some(stream) = incoming.next().await {
+///     // handle stream
+/// }
+/// 
+/// # Ok(())
+/// # }
+/// ```
 pub mod subscribe;
-
+ 
 pub use error::Error;
 pub use search::{search, SearchTarget};
 pub use subscribe::subscribe;
