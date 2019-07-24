@@ -1,5 +1,4 @@
-use crate::parse_headers;
-use crate::Error;
+use crate::{parse_headers, Error};
 use futures::prelude::*;
 use romio::TcpStream;
 use std::net::SocketAddr;

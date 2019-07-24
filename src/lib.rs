@@ -28,11 +28,19 @@ pub use subscribe::subscribe;
 
 #[macro_export]
 #[doc(hidden)]
-// todo: figure out how to import wihtout macro_export
 macro_rules! parse_headers {
     ( $response:expr => $($header:ident),+ ) => { {
         let mut response = $response.split("\r\n");
-        assert_eq!(response.next(), Some("HTTP/1.1 200 OK")); // TODO
+        if let Some(status) = response.next() {
+            let status = status.trim_start_matches("HTTP/1.1 ");
+            let status_code = status.chars().take_while(|x| x.is_numeric())
+                .collect::<String>().parse::<u32>().map_err(|_| crate::Error::ParseHTTPError)?;
+            if status_code != 200 {
+                return Err(crate::Error::HTTPError(status_code));
+            }
+        } else {
+            return Err(crate::Error::ParseHTTPError);
+        }
         let headers = response.filter_map(|l| {
             let mut split = l.splitn(2, ':');
             match (split.next(), split.next()) {

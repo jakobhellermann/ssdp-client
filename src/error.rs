@@ -19,6 +19,12 @@ pub enum Error {
     /// Malformed search target in SSDP header
     #[display(fmt = "{}", _0)]
     ParseSearchTargetError(ParseSearchTargetError),
+    #[display(fmt = "failed to parse http response")]
+    /// Failed to parse HTTP response
+    ParseHTTPError,
+    #[display(fmt = "control point responded with '{}' exit code", _0)]
+    /// Non-200 HTTP Status Code
+    HTTPError(u32),
 }
 
 impl std::error::Error for Error {
