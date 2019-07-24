@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/jjakobh/ssdp-client.svg?branch=master)](https://travis-ci.com/jjakobh/ssdp-client)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jjakobh/ssdp-client.svg)
+[![Crates.io](https://img.shields.io/crates/v/ssdp-client.svg)](https://crates.io/crates/ssdp-client)
 
 ssdp-client
 =======
