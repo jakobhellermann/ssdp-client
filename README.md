@@ -1,4 +1,4 @@
-ssdp-rs
+ssdp-client
 =======
 An asynchronous library for discovering, notifying and subscibing to devices and services on a network.
 
@@ -8,7 +8,7 @@ discover each other. SSDP can most commonly be found in devices that implement
 `UPnP` as it is used as the discovery mechanism for that standard.
 
 **Technical Spefification:**
-* http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v2.0.pdf
+http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v2.0.pdf
 
 License
 -------
@@ -22,6 +22,8 @@ at your option.
 
 Contribution
 ------------
+
+Please use [rustfmt](https://github.com/rust-lang/rustfmt) before any pull requests.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
