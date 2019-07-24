@@ -38,13 +38,16 @@ impl std::str::FromStr for SearchTarget<'_> {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, DisplayAttr)]
-#[allow(missing_docs)]
 #[display(fmt = "urn:{}:{}:{}:{}", domain, urn_type, type_, version)]
 /// Uniform Resource Name
 pub struct URN<'s> {
+    /// e.g. schemas-upnp-org
     pub domain: Cow<'s, str>,
+    /// service/device
     pub urn_type: URNType,
+    /// e.g. RenderingControl
     pub type_: Cow<'s, str>,
+    /// Version of `urn_type`
     pub version: u32,
 }
 

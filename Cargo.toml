@@ -2,7 +2,16 @@
 name = "ssdp-client"
 version = "0.3.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
+description = "An asynchronous library for discovering, notifying and subscibing to devices and services on a network."
+categories = ["Asynchronous", "Network Programming"]
+keywords = ["async", "ssdp", "networking", "protocols"]
+repository = "https://github.com/jjakobh/ssdp-client"
+documentation = "https://docs.rs/ssdp-client"
+readme = "README.md"
+license = "MIT/Apache-2.0"
 edition = "2018"
+
+[badges]
 
 [dependencies]
 romio = "0.3.0-alpha.9"
