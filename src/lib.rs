@@ -50,27 +50,27 @@ pub mod search;
 ///     "http://192.168.2.94:7878", // localhost:7878
 ///     60
 /// ).await?;
-/// 
+///
 /// println!(
 ///     "SID {} from {} with {}",
 ///     response.sid(),
 ///     response.server(),
 ///     response.timeout()
 /// );
-/// 
+///
 /// let mut listener = TcpListener::bind(&"192.168.2.91:7878".parse().unwrap())?;
 /// let mut incoming = listener.incoming();
-/// 
+///
 /// println!("Listening on 192.168.2.91:7878");
 /// while let Some(stream) = incoming.next().await {
 ///     // handle stream
 /// }
-/// 
+///
 /// # Ok(())
 /// # }
 /// ```
 pub mod subscribe;
- 
+
 pub use error::Error;
 pub use search::{search, SearchTarget};
 pub use subscribe::subscribe;

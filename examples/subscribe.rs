@@ -13,7 +13,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         "/MediaRenderer/AVTransport/Event",
         "http://192.168.2.91:7878", // localhost:7878
         10,
-    ).await?;
+    )
+    .await?;
 
     println!(
         "SID {} from {} with {}",
