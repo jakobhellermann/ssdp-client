@@ -57,7 +57,7 @@ MX: {}\r\n\r\n",
     loop {
         let mut buf = [0u8; 1024];
         let text = match socket.recv_from(&mut buf).timeout(timeout).await {
-            Ok((read, _)) if read == 1024 => unimplemented!(), // TODO
+            Ok((read, _)) if read == 1024 => { handle_insufficient_buffer_size(); continue; }
             Ok((read, _)) => std::str::from_utf8(&buf[..read])?,
             Err(e) if e.kind() == TimedOut => break Ok(responses),
             Err(e) => return Err(e.into()),
@@ -71,4 +71,14 @@ MX: {}\r\n\r\n",
             usn: usn.to_string(),
         });
     }
+}
+
+const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
+#[cfg(debug_assertions)]
+fn handle_insufficient_buffer_size() {
+    panic!(INSUFFICIENT_BUFFER_MSG);
+}
+#[cfg(not(debug_assertions))]
+fn handle_insufficient_buffer_size() {
+    log::warn!(INSUFFICIENT_BUFFER_MSG);
 }

@@ -20,6 +20,7 @@ romio = "0.3.0-alpha.9"
 futures-preview = "0.3.0-alpha.17"
 futures-timer = "0.2"
 display_attr = "0.1.1"
+log = "0.4"
 
 [dev-dependencies]
 runtime = "0.3.0-alpha.6"
