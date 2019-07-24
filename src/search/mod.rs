@@ -4,7 +4,8 @@ use romio::UdpSocket;
 use std::{io::ErrorKind::TimedOut, net::SocketAddr};
 
 mod search_target;
-pub use search_target::*; 
+pub use search_target::*;
+
 #[derive(Debug)]
 /// Response given by ssdp control point
 pub struct SearchResponse<'s> {

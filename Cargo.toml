@@ -12,6 +12,8 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [badges]
+travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
+maintainance = { status = "active" }
 
 [dependencies]
 romio = "0.3.0-alpha.9"

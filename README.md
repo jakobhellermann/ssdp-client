@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/jjakobh/ssdp-client.svg?branch=master)](https://travis-ci.com/jjakobh/ssdp-client)
+![GitHub last commit](https://img.shields.io/github/last-commit/jjakobh/ssdp-client.svg)
+
 ssdp-client
 =======
 An asynchronous library for discovering, notifying and subscibing to devices and services on a network.
