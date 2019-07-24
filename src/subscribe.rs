@@ -57,7 +57,7 @@ TIMEOUT: Second-{}\r\n\r\n",
 
     let response = String::from_utf8(buf).map_err(|e| e.utf8_error())?;
 
-    let (sid, timeout, server) = parse_headers!(response => sid, timeout, server);
+    let (sid, timeout, server) = parse_headers!(response.as_ref() => sid, timeout, server)?;
 
     Ok(SubscribeResponse {
         sid: sid.to_string(),

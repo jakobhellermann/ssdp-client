@@ -66,7 +66,7 @@ MX: {}\r\n\r\n",
             Err(e) => return Err(e.into()),
         };
 
-        let (location, st, usn) = parse_headers!(text => location, st, usn);
+        let (location, st, usn) = parse_headers!(text => location, st, usn)?;
 
         responses.push(SearchResponse {
             location: location.to_string(),
