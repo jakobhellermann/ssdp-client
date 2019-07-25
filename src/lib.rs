@@ -1,4 +1,9 @@
-#![feature(async_await, bind_by_move_pattern_guards)]
+#![feature(
+    async_await,
+    bind_by_move_pattern_guards,
+    generators,
+    proc_macro_hygiene
+)]
 #![deny(unsafe_code)]
 #![warn(
     missing_docs,
@@ -20,14 +25,16 @@ pub mod error;
 /// Methods and structs for dealing with searching devices
 /// # Example
 /// ```rust,norun
-/// # #![feature(async_await)]
+/// # #![feature(async_await, proc_macro_hygiene, stmt_expr_attributes)]
 /// # async fn f() -> Result<(), ssdp_client::Error> {
 /// # use std::time::Duration;
 /// # use ssdp_client::SearchTarget;
+/// # use futures::for_await;
 /// let search_target = "urn:schemas-upnp-org:device:ZonePlayer:1".parse().unwrap();
 /// // let search_target = SearchTarget::RootDevice;
 /// let responses = ssdp_client::search(search_target, Duration::from_secs(3), 2).await?;
 ///
+/// #[for_await]
 /// for response in responses {
 ///     println!("{:?}", response);
 /// }

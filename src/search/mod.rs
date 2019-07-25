@@ -1,10 +1,23 @@
 use crate::{parse_headers, Error};
+use futures::{async_stream, Stream};
 use futures_timer::FutureExt;
 use romio::UdpSocket;
-use std::{io::ErrorKind::TimedOut, net::SocketAddr};
+use std::{io::ErrorKind::TimedOut, net::SocketAddr, time::Duration};
 
 mod search_target;
 pub use search_target::*;
+
+macro_rules! try_yield {
+    ($expr:expr) => {
+        match $expr {
+            Ok(v) => v,
+            Err(e) => {
+                yield core::task::Poll::Ready(Err(e.into()));
+                continue;
+            }
+        }
+    };
+}
 
 #[derive(Debug)]
 /// Response given by ssdp control point
@@ -34,9 +47,9 @@ impl SearchResponse<'_> {
 /// Therefore, the timeout should be at least mx seconds.
 pub async fn search(
     search_target: SearchTarget<'_>,
-    timeout: std::time::Duration,
+    timeout: Duration,
     mx: usize,
-) -> Result<Vec<SearchResponse<'_>>, Error> {
+) -> Result<impl Stream<Item = Result<SearchResponse<'static>, Error>>, Error> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
@@ -52,8 +65,11 @@ MX: {}\r\n\r\n",
     );
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
-    let mut responses = Vec::new();
+    Ok(read_search_socket(socket, timeout))
+}
 
+#[async_stream(item = Result<SearchResponse<'static>, Error>)]
+fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
     loop {
         let mut buf = [0u8; 2048];
         let text = match socket.recv_from(&mut buf).timeout(timeout).await {
@@ -61,16 +77,16 @@ MX: {}\r\n\r\n",
                 handle_insufficient_buffer_size();
                 continue;
             }
-            Ok((read, _)) => std::str::from_utf8(&buf[..read])?,
-            Err(e) if e.kind() == TimedOut => break Ok(responses),
-            Err(e) => return Err(e.into()),
+            Ok((read, _)) => try_yield!(std::str::from_utf8(&buf[..read])),
+            Err(e) if e.kind() == TimedOut => break,
+            Err(e) => try_yield!(Err(e)),
         };
 
-        let (location, st, usn) = parse_headers!(text => location, st, usn)?;
+        let (location, st, usn) = try_yield!(parse_headers!(text => location, st, usn));
 
-        responses.push(SearchResponse {
+        yield Ok(SearchResponse {
             location: location.to_string(),
-            st: st.parse()?,
+            st: try_yield!(st.parse()),
             usn: usn.to_string(),
         });
     }

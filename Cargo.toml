@@ -16,10 +16,13 @@ travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
 
 [dependencies]
 romio = "0.3.0-alpha.9"
-futures-preview = "0.3.0-alpha.17"
 futures-timer = "0.2"
 display_attr = "0.1.1"
 log = "0.4"
+futures-preview = { git = "https://github.com/taiki-e/futures-rs.git", branch = "async-stream", features = ["async-stream", "nightly"] }
 
 [dev-dependencies]
 runtime = "0.3.0-alpha.6"
+
+[patch.crates-io]
+futures-preview = { git = "https://github.com/taiki-e/futures-rs.git", branch = "async-stream", features = ["async-stream", "nightly"] }
