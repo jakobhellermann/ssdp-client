@@ -1,6 +1,6 @@
 [package]
 name = "ssdp-client"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 description = "An asynchronous library for discovering, notifying and subscribing to devices and services on a network."
 categories = ["network-programming", "asynchronous"]
@@ -19,10 +19,8 @@ romio = "0.3.0-alpha.9"
 futures-timer = "0.2"
 display_attr = "0.1.1"
 log = "0.4"
-futures-preview = { git = "https://github.com/taiki-e/futures-rs.git", branch = "async-stream", features = ["async-stream", "nightly"] }
+futures-preview = "0.3.0-alpha.17"
+futures-async-stream = "0.1.0-alpha.1"
 
 [dev-dependencies]
 runtime = "0.3.0-alpha.6"
-
-[patch.crates-io]
-futures-preview = { git = "https://github.com/taiki-e/futures-rs.git", branch = "async-stream", features = ["async-stream", "nightly"] }

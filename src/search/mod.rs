@@ -1,5 +1,6 @@
 use crate::{parse_headers, Error};
-use futures::{async_stream, Stream};
+use futures::Stream;
+use futures_async_stream::async_stream;
 use futures_timer::FutureExt;
 use romio::UdpSocket;
 use std::{io::ErrorKind::TimedOut, net::SocketAddr, time::Duration};
@@ -69,7 +70,7 @@ MX: {}\r\n\r\n",
 }
 
 #[async_stream(item = Result<SearchResponse<'static>, Error>)]
-fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
+async fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
     loop {
         let mut buf = [0u8; 2048];
         let text = match socket.recv_from(&mut buf).timeout(timeout).await {

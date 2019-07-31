@@ -1,6 +1,6 @@
 #![feature(async_await, proc_macro_hygiene, stmt_expr_attributes)]
 
-use futures::for_await;
+use futures_async_stream::for_await;
 use ssdp_client::search::SearchTarget;
 use std::time::Duration;
 
