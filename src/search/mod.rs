@@ -1,7 +1,7 @@
 use crate::{parse_headers, Error};
 use futures::Stream;
 use futures_async_stream::async_stream;
-use futures_timer::FutureExt;
+use futures_timer::TryFutureExt;
 use romio::UdpSocket;
 use std::{io::ErrorKind::TimedOut, net::SocketAddr, time::Duration};
 
