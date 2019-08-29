@@ -26,11 +26,12 @@ pub struct SearchResponse<'s> {
     location: String,
     st: SearchTarget<'s>,
     usn: String,
+    server: String,
 }
 
 impl SearchResponse<'_> {
     /// URL of the control point
-    pub fn location(&self) -> &String {
+    pub fn location(&self) -> &str {
         &self.location
     }
     /// search target returned by the control point
@@ -38,8 +39,12 @@ impl SearchResponse<'_> {
         &self.st
     }
     /// Unique Service Name
-    pub fn usn(&self) -> &String {
+    pub fn usn(&self) -> &str {
         &self.usn
+    }
+    /// Server (user agent)
+    pub fn server(&self) -> &str {
+        &self.server
     }
 }
 
@@ -83,12 +88,13 @@ async fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
             Err(e) => try_yield!(Err(e)),
         };
 
-        let (location, st, usn) = try_yield!(parse_headers!(text => location, st, usn));
+        let (location, st, usn, server) = try_yield!(parse_headers!(text => location, st, usn, server));
 
         yield Ok(SearchResponse {
             location: location.to_string(),
             st: try_yield!(st.parse()),
             usn: usn.to_string(),
+            server: server.to_string(),
         });
     }
 }
