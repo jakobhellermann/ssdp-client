@@ -1,5 +1,3 @@
-#![feature(async_await)]
-
 use futures::io::AllowStdIo;
 use futures::prelude::*;
 use romio::TcpListener;

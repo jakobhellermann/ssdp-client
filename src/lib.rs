@@ -1,10 +1,8 @@
 #![feature(
-    async_await,
     bind_by_move_pattern_guards,
     generators,
     proc_macro_hygiene
 )]
-#![deny(unsafe_code)]
 #![warn(
     missing_docs,
     nonstandard_style,
@@ -25,7 +23,7 @@ pub mod error;
 /// Methods and structs for dealing with searching devices
 /// # Example
 /// ```rust,norun
-/// # #![feature(async_await, proc_macro_hygiene, stmt_expr_attributes)]
+/// # #![feature(proc_macro_hygiene, stmt_expr_attributes)]
 /// # async fn f() -> Result<(), ssdp_client::Error> {
 /// # use std::time::Duration;
 /// # use ssdp_client::SearchTarget;
@@ -46,7 +44,6 @@ pub mod search;
 /// Methods and structs for dealing with subscribing to devices
 /// # Example
 /// ```rust,norun
-/// # #![feature(async_await)]
 /// # use futures::{StreamExt, io::AllowStdIo};
 /// # use romio::TcpListener;
 /// # use std::io;
