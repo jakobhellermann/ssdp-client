@@ -1,8 +1,4 @@
-#![feature(
-    bind_by_move_pattern_guards,
-    generators,
-    proc_macro_hygiene
-)]
+#![feature(generators, proc_macro_hygiene)]
 #![warn(
     missing_docs,
     nonstandard_style,

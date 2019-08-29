@@ -16,11 +16,11 @@ travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
 
 [dependencies]
 romio = "0.3.0-alpha.9"
-futures-timer = "0.3.0"
-display_attr = "0.1.1"
-log = "0.4.8"
-futures-preview = "0.3.0-alpha.17"
-futures-async-stream = "0.1.0-alpha.1"
+futures-timer = "0.3"
+log = "0.4"
+futures-preview = "0.3.0-alpha.18"
+futures-async-stream = "0.1.0-alpha.5"
+err-derive = "0.1.6"
 
 [dev-dependencies]
-runtime = "0.3.0-alpha.6"
+runtime = "0.3.0-alpha.7"

@@ -1,40 +1,30 @@
-use display_attr::DisplayAttr;
+use err_derive::Error;
 use std::{io, str::Utf8Error};
 
-#[derive(Debug, DisplayAttr)]
+#[derive(Debug, Error)]
 /// The Error type
 pub enum Error {
     /// IO Error
-    #[display(fmt = "io error: {}", _0)]
-    IO(io::Error),
+    #[error(display = "io error: {}", _0)]
+    IO(#[error(cause)] io::Error),
     /// SSDP is not encoded properly
-    #[display(fmt = "utf8 error: {}", _0)]
-    Utf8Error(Utf8Error),
+    #[error(display = "utf8 error: {}", _0)]
+    Utf8Error(#[error(cause)] Utf8Error),
     /// Missing header in the SSDP Response
-    #[display(fmt = "missing header: {}", _0)]
+    #[error(display = "missing header: {}", _0)]
     MissingHeader(&'static str),
     /// Invalid header in the SSDP Response
-    #[display(fmt = "invalid header: {}", _0)]
+    #[error(display = "invalid header: {}", _0)]
     InvalidHeader(&'static str),
     /// Malformed search target in SSDP header
-    #[display(fmt = "{}", _0)]
-    ParseSearchTargetError(ParseSearchTargetError),
-    #[display(fmt = "failed to parse http response")]
+    #[error(display = "{}", _0)]
+    ParseSearchTargetError(#[error(cause)] ParseSearchTargetError),
+    #[error(display = "failed to parse http response")]
     /// Failed to parse HTTP response
     ParseHTTPError,
-    #[display(fmt = "control point responded with '{}' exit code", _0)]
+    #[error(display = "control point responded with '{}' exit code", _0)]
     /// Non-200 HTTP Status Code
     HTTPError(u32),
-}
-
-impl std::error::Error for Error {
-    fn cause(&self) -> Option<&dyn std::error::Error> {
-        match &self {
-            Error::IO(e) => Some(e),
-            Error::Utf8Error(e) => Some(e),
-            _ => None,
-        }
-    }
 }
 
 impl From<io::Error> for Error {
@@ -55,19 +45,17 @@ impl From<ParseSearchTargetError> for Error {
 }
 
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Eq, PartialEq, DisplayAttr)]
-#[display(fmt = "failed to parse urn")]
+#[derive(Debug, Eq, PartialEq, Error)]
+#[error(display = "failed to parse urn")]
 pub struct ParseURNError;
-impl std::error::Error for ParseURNError {}
 
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Eq, PartialEq, DisplayAttr)]
+#[derive(Debug, Eq, PartialEq, Error)]
 pub enum ParseSearchTargetError {
     /// Failed to parse URN in Search Target
-    #[display(fmt = "{}", _0)]
-    URN(ParseURNError),
+    #[error(display = "{}", _0)]
+    URN(#[error(cause)] ParseURNError),
     /// Failed to parse Search Target
-    #[display(fmt = "failed to parse search target")]
+    #[error(display = "failed to parse search target")]
     ST,
 }
-impl std::error::Error for ParseSearchTargetError {}

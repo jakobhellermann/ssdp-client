@@ -88,7 +88,8 @@ async fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
             Err(e) => try_yield!(Err(e)),
         };
 
-        let (location, st, usn, server) = try_yield!(parse_headers!(text => location, st, usn, server));
+        let (location, st, usn, server) =
+            try_yield!(parse_headers!(text => location, st, usn, server));
 
         yield Ok(SearchResponse {
             location: location.to_string(),

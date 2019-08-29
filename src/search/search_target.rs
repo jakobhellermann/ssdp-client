@@ -1,22 +1,22 @@
 use crate::error::{ParseSearchTargetError, ParseURNError};
-use display_attr::DisplayAttr;
+use err_derive::Error;
 use std::borrow::Cow;
 
-#[derive(Debug, Eq, PartialEq, Clone, DisplayAttr)]
+#[derive(Debug, Eq, PartialEq, Clone, Error)]
 /// Specify what SSDP control points to search for
 pub enum SearchTarget<'s> {
     /// Search for all devices and services.
-    #[display(fmt = "ssdp:all")]
+    #[error(display = "ssdp:all")]
     All,
     /// Search for root devices only.
-    #[display(fmt = "upnp:rootdevice")]
+    #[error(display = "upnp:rootdevice")]
     RootDevice,
     /// Search for a particular device. device-UUID specified by UPnP vendor.
-    #[display(fmt = "uuid:{}", _0)]
+    #[error(display = "uuid:{}", _0)]
     UUID(String),
     /// e.g. schemas-upnp-org:device:ZonePlayer:1
     /// or schemas-sonos-com:service:Queue:1
-    #[display(fmt = "{}", _0)]
+    #[error(display = "{}", _0)]
     URN(URN<'s>),
 }
 
@@ -37,8 +37,8 @@ impl std::str::FromStr for SearchTarget<'_> {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, DisplayAttr)]
-#[display(fmt = "urn:{}:{}:{}:{}", domain, urn_type, type_, version)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
+#[error(display = "urn:{}:{}:{}:{}", domain, urn_type, type_, version)]
 #[allow(missing_docs)]
 /// Uniform Resource Name
 /// urn:$domain:$urn_type:$type_:$version
@@ -69,12 +69,12 @@ impl std::str::FromStr for URN<'_> {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, DisplayAttr)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Error)]
 #[allow(missing_docs)]
 pub enum URNType {
-    #[display(fmt = "service")]
+    #[error(display = "service")]
     Service,
-    #[display(fmt = "device")]
+    #[error(display = "device")]
     Device,
 }
 
