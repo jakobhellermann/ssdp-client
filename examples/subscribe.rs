@@ -1,11 +1,15 @@
-use futures::io::AllowStdIo;
-use futures::prelude::*;
-use romio::TcpListener;
-use std::io;
+#![feature(stmt_expr_attributes, proc_macro_hygiene)]
 
-#[runtime::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let control_point = ([192, 168, 2, 49], 1400).into();
+use async_std::{io, net::TcpListener, task};
+use futures::prelude::*;
+use futures_async_stream::for_await;
+
+fn main() -> Result<(), ssdp_client::Error> {
+    task::block_on(subscribe())
+}
+
+async fn subscribe() -> Result<(), ssdp_client::Error> {
+    let control_point: std::net::SocketAddr = ([192, 168, 2, 49], 1400).into();
     let response = ssdp_client::subscribe(
         &control_point,
         "/MediaRenderer/AVTransport/Event",
@@ -21,15 +25,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         response.timeout()
     );
 
-    let addr = ([192, 168, 2, 91], 7878).into();
-    let mut listener = TcpListener::bind(&addr)?;
-    let mut incoming = listener.incoming();
+    let addr: std::net::SocketAddr = ([192, 168, 2, 91], 7878).into();
+    let listener = TcpListener::bind(&addr).await?;
 
     println!("Listening on {}", addr);
-    while let Some(stream) = incoming.next().await {
-        let stream = stream?;
-        let mut stdout = AllowStdIo::new(io::stdout());
-        stream.copy_into(&mut stdout).await?;
+    #[for_await]
+    for stream in listener.incoming() {
+        stream?.copy_into(&mut io::stdout()).await?;
         println!();
     }
 

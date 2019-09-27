@@ -40,17 +40,16 @@ pub mod search;
 /// Methods and structs for dealing with subscribing to devices
 /// # Example
 /// ```rust,norun
-/// # use futures::{StreamExt, io::AllowStdIo};
-/// # use romio::TcpListener;
-/// # use std::io;
-/// # async fn f() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+/// # #![feature(stmt_expr_attributes, proc_macro_hygiene)]
+/// # async fn subscribe() -> Result<(), ssdp_client::Error> {
 /// let control_point = ([192, 168, 2, 49], 1400).into();
 /// let response = ssdp_client::subscribe(
 ///     &control_point,
 ///     "/MediaRenderer/AVTransport/Event",
-///     "http://192.168.2.94:7878", // localhost:7878
-///     60
-/// ).await?;
+///     "http://192.168.2.91:7878", // localhost:7878
+///     10,
+/// )
+/// .await?;
 ///
 /// println!(
 ///     "SID {} from {} with {}",
@@ -58,18 +57,10 @@ pub mod search;
 ///     response.server(),
 ///     response.timeout()
 /// );
-///
-/// let mut listener = TcpListener::bind(&"192.168.2.91:7878".parse().unwrap())?;
-/// let mut incoming = listener.incoming();
-///
-/// println!("Listening on 192.168.2.91:7878");
-/// while let Some(stream) = incoming.next().await {
-///     // handle stream
-/// }
-///
 /// # Ok(())
 /// # }
 /// ```
+/// see full example at `examples` folder
 pub mod subscribe;
 
 pub use error::Error;

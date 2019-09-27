@@ -1,6 +1,6 @@
 use crate::{parse_headers, Error};
-use futures::prelude::*;
-use romio::TcpStream;
+use async_std::net::TcpStream;
+use async_std::prelude::*;
 use std::net::SocketAddr;
 
 /// Response given by Control Point after SUBSCRIBE http Request
@@ -48,12 +48,11 @@ TIMEOUT: Second-{}\r\n\r\n",
         timeout
     );
 
-    let stream = TcpStream::connect(addr).await?;
-    let (mut reader, mut writer) = stream.split();
-    writer.write_all(msg.as_bytes()).await?;
+    let mut stream = TcpStream::connect(addr).await?;
+    stream.write_all(msg.as_bytes()).await?;
 
     let mut buf = Vec::new();
-    reader.read_to_end(&mut buf).await?;
+    stream.read_to_end(&mut buf).await?;
 
     let response = String::from_utf8(buf).map_err(|e| e.utf8_error())?;
 

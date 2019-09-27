@@ -1,11 +1,15 @@
 #![feature(proc_macro_hygiene, stmt_expr_attributes)]
 
+use async_std::task;
 use futures_async_stream::for_await;
 use ssdp_client::search::SearchTarget;
 use std::time::Duration;
 
-#[runtime::main]
-async fn main() -> Result<(), ssdp_client::Error> {
+fn main() -> Result<(), ssdp_client::Error> {
+    task::block_on(search())
+}
+
+async fn search() -> Result<(), ssdp_client::Error> {
     //let search_target = SearchTarget::RootDevice;
     let search_target: SearchTarget = "urn:schemas-upnp-org:device:ZonePlayer:1".parse().unwrap();
     let timeout = Duration::from_secs(3);

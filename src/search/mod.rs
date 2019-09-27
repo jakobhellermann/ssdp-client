@@ -1,12 +1,14 @@
 use crate::{parse_headers, Error};
+use async_std::io;
+use async_std::net::UdpSocket;
 use futures::Stream;
 use futures_async_stream::async_stream;
-use futures_timer::TryFutureExt;
-use romio::UdpSocket;
 use std::{io::ErrorKind::TimedOut, net::SocketAddr, time::Duration};
 
 mod search_target;
 pub use search_target::*;
+
+const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 
 macro_rules! try_yield {
     ($expr:expr) => {
@@ -59,7 +61,7 @@ pub async fn search(
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
-    let mut socket = UdpSocket::bind(&bind_addr)?;
+    let socket = UdpSocket::bind(&bind_addr).await?;
 
     let msg = format!(
         "M-SEARCH * HTTP/1.1\r
@@ -75,14 +77,11 @@ MX: {}\r\n\r\n",
 }
 
 #[async_stream(item = Result<SearchResponse<'static>, Error>)]
-async fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
+async fn read_search_socket(socket: UdpSocket, timeout: Duration) {
     loop {
         let mut buf = [0u8; 2048];
-        let text = match socket.recv_from(&mut buf).timeout(timeout).await {
-            Ok((read, _)) if read == 2048 => {
-                handle_insufficient_buffer_size();
-                continue;
-            }
+        let text = match io::timeout(timeout, socket.recv_from(&mut buf)).await {
+            Ok((read, _)) if read == 2048 => panic!(INSUFFICIENT_BUFFER_MSG),
             Ok((read, _)) => try_yield!(std::str::from_utf8(&buf[..read])),
             Err(e) if e.kind() == TimedOut => break,
             Err(e) => try_yield!(Err(e)),
@@ -98,14 +97,4 @@ async fn read_search_socket(mut socket: UdpSocket, timeout: Duration) {
             server: server.to_string(),
         });
     }
-}
-
-const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
-#[cfg(debug_assertions)]
-fn handle_insufficient_buffer_size() {
-    panic!(INSUFFICIENT_BUFFER_MSG);
-}
-#[cfg(not(debug_assertions))]
-fn handle_insufficient_buffer_size() {
-    log::warn!(INSUFFICIENT_BUFFER_MSG);
 }
