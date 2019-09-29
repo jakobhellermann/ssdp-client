@@ -95,12 +95,12 @@ fn parse_headers(response: &str) -> Result<impl Iterator<Item = (&str, &str)>, c
             .take_while(|x| x.is_numeric())
             .collect::<String>()
             .parse::<u32>()
-            .map_err(|_| crate::Error::ParseHTTPError)?;
+            .map_err(|_| crate::Error::InvalidHTTP("status code is not a number"))?;
         if status_code != 200 {
             return Err(crate::Error::HTTPError(status_code));
         }
     } else {
-        return Err(crate::Error::ParseHTTPError);
+        return Err(crate::Error::InvalidHTTP("http response is empty"));
     }
 
     Ok(response.filter_map(|l| {

@@ -19,38 +19,21 @@ pub enum Error {
     /// Malformed search target in SSDP header
     #[error(display = "{}", _0)]
     ParseSearchTargetError(#[error(cause)] ParseSearchTargetError),
-    #[error(display = "failed to parse http response")]
+    #[error(display = "failed to parse http response: {}", _0)]
     /// Failed to parse HTTP response
-    ParseHTTPError,
+    InvalidHTTP(&'static str),
     #[error(display = "control point responded with '{}' exit code", _0)]
     /// Non-200 HTTP Status Code
     HTTPError(u32),
 }
 
-impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Self {
-        Error::IO(e)
-    }
-}
-
-impl From<Utf8Error> for Error {
-    fn from(e: Utf8Error) -> Self {
-        Error::Utf8Error(e)
-    }
-}
-impl From<ParseSearchTargetError> for Error {
-    fn from(e: ParseSearchTargetError) -> Self {
-        Error::ParseSearchTargetError(e)
-    }
-}
-
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Eq, PartialEq, Error)]
+#[derive(Debug, Error)]
 #[error(display = "failed to parse urn")]
 pub struct ParseURNError;
 
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Eq, PartialEq, Error)]
+#[derive(Debug, Error)]
 pub enum ParseSearchTargetError {
     /// Failed to parse URN in Search Target
     #[error(display = "{}", _0)]
