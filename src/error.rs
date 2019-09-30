@@ -28,12 +28,12 @@ pub enum Error {
 }
 
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 #[error(display = "failed to parse urn")]
 pub struct ParseURNError;
 
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum ParseSearchTargetError {
     /// Failed to parse URN in Search Target
     #[error(display = "{}", _0)]
