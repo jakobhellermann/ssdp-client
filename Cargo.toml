@@ -1,6 +1,6 @@
 [package]
 name = "ssdp-client"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 description = "An asynchronous library for discovering, notifying and subscribing to devices and services on a network."
 categories = ["network-programming", "asynchronous"]
@@ -15,7 +15,7 @@ edition = "2018"
 travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
 
 [dependencies]
-async-std = "0.99"
+async-std = "0.99.8"
 futures-preview = "0.3.0-alpha.18"
 futures-async-stream = "0.1.0-alpha.7"
 err-derive = { git = "https://gitlab.com/torkleyy/err-derive" }
