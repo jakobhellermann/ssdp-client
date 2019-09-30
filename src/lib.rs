@@ -64,7 +64,7 @@ pub mod search;
 pub mod subscribe;
 
 pub use error::Error;
-pub use search::{search, SearchTarget};
+pub use search::{search, SearchTarget, URN};
 pub use subscribe::subscribe;
 
 #[macro_export]
