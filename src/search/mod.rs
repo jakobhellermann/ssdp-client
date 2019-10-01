@@ -24,20 +24,20 @@ macro_rules! try_yield {
 
 #[derive(Debug)]
 /// Response given by ssdp control point
-pub struct SearchResponse<'s> {
+pub struct SearchResponse {
     location: String,
-    st: SearchTarget<'s>,
+    st: SearchTarget,
     usn: String,
     server: String,
 }
 
-impl SearchResponse<'_> {
+impl SearchResponse {
     /// URL of the control point
     pub fn location(&self) -> &str {
         &self.location
     }
     /// search target returned by the control point
-    pub fn search_target(&self) -> &SearchTarget<'_> {
+    pub fn search_target(&self) -> &SearchTarget {
         &self.st
     }
     /// Unique Service Name
@@ -54,10 +54,10 @@ impl SearchResponse<'_> {
 /// Control Points will wait a random amount of time between 0 and mx seconds before responing to avoid flooding the requester with responses.
 /// Therefore, the timeout should be at least mx seconds.
 pub async fn search(
-    search_target: SearchTarget<'_>,
+    search_target: SearchTarget,
     timeout: Duration,
     mx: usize,
-) -> Result<impl Stream<Item = Result<SearchResponse<'static>, Error>>, Error> {
+) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
@@ -76,7 +76,7 @@ MX: {}\r\n\r\n",
     Ok(read_search_socket(socket, timeout))
 }
 
-#[async_stream(item = Result<SearchResponse<'static>, Error>)]
+#[async_stream(item = Result<SearchResponse, Error>)]
 async fn read_search_socket(socket: UdpSocket, timeout: Duration) {
     loop {
         let mut buf = [0u8; 2048];
