@@ -54,7 +54,7 @@ impl SearchResponse {
 /// Control Points will wait a random amount of time between 0 and mx seconds before responing to avoid flooding the requester with responses.
 /// Therefore, the timeout should be at least mx seconds.
 pub async fn search(
-    search_target: SearchTarget,
+    search_target: &SearchTarget,
     timeout: Duration,
     mx: usize,
 ) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {

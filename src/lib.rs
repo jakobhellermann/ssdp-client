@@ -27,7 +27,7 @@ pub mod error;
 ///
 /// let search_target = "urn:schemas-upnp-org:device:ZonePlayer:1".parse().unwrap();
 /// // let search_target = SearchTarget::RootDevice;
-/// let responses = ssdp_client::search(search_target, Duration::from_secs(3), 2).await?;
+/// let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
 ///
 /// #[for_await]
 /// for response in responses {

@@ -12,7 +12,7 @@ async fn search() -> Result<(), ssdp_client::Error> {
     // let search_target = SearchTarget::RootDevice;
     let search_target = URN::device("schemas-upnp-org", "ZonePlayer", 1).into();
     let timeout = Duration::from_secs(3);
-    let stream = ssdp_client::search(search_target, timeout, 2).await?;
+    let responses = ssdp_client::search(&search_target, timeout, 2).await?;
 
     #[for_await]
     for response in stream {
