@@ -1,23 +1,29 @@
 use crate::error::{ParseSearchTargetError, ParseURNError};
-use err_derive::Error;
 use std::borrow::Cow;
+use std::fmt;
 
-#[derive(Debug, Eq, PartialEq, Clone, Error)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 /// Specify what SSDP control points to search for
 pub enum SearchTarget {
     /// Search for all devices and services.
-    #[error(display = "ssdp:all")]
     All,
     /// Search for root devices only.
-    #[error(display = "upnp:rootdevice")]
     RootDevice,
-    /// Search for a particular device. device-UUID specified by UPnP vendor.
-    #[error(display = "uuid:{}", _0)]
+    /// unique identifier for a device
     UUID(String),
     /// e.g. schemas-upnp-org:device:ZonePlayer:1
     /// or schemas-sonos-com:service:Queue:1
-    #[error(display = "{}", _0)]
     URN(URN),
+}
+impl fmt::Display for SearchTarget {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SearchTarget::All => write!(f, "ssdp:all"),
+            SearchTarget::RootDevice => write!(f, "upnp:rootdevice"),
+            SearchTarget::UUID(uuid) => write!(f, "uuid:{}", uuid),
+            SearchTarget::URN(urn) => write!(f, "{}", urn),
+        }
+    }
 }
 
 impl std::str::FromStr for SearchTarget {
@@ -37,35 +43,36 @@ impl std::str::FromStr for SearchTarget {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Error)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[allow(missing_docs)]
 /// Uniform Resource Name
 /// urn:$domain:$urn_type:$type_:$version
 /// urn:schemas-upnp-org:service:RenderingControl:1
 pub enum URN {
-    #[error(display = "urn:{}:device:{}:{}", domain, typ, version)]
-    Device { domain: Cow<'static, str>, typ: Cow<'static, str>, version: u32 },
-    #[error(display = "urn:{}:service:{}:{}", domain, typ, version)]
-    Service{ domain: Cow<'static, str>, typ: Cow<'static, str>, version: u32 },
+    Device(Cow<'static, str>, Cow<'static, str>, u32),
+    Service(Cow<'static, str>, Cow<'static, str>, u32),
+}
+impl fmt::Display for URN {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            URN::Device(domain, typ, version) => {
+                write!(f, "urn:{}:device:{}:{}", domain, typ, version)
+            }
+            URN::Service(domain, typ, version) => {
+                write!(f, "urn:{}:service:{}:{}", domain, typ, version)
+            }
+        }
+    }
 }
 
 impl URN {
-    /// Creates an instance of a service URN
-    pub const fn service(domain: &'static str, typ: &'static str, version: u32) -> Self {
-        URN::Service {
-            domain: Cow::Borrowed(domain),
-            typ: Cow::Borrowed(typ),
-            version,
-        }
-    }
-
     /// Creates an instance of a device URN
     pub const fn device(domain: &'static str, typ: &'static str, version: u32) -> Self {
-        URN::Device {
-            domain: Cow::Borrowed(domain),
-            typ: Cow::Borrowed(typ),
-            version,
-        }
+        URN::Device(Cow::Borrowed(domain), Cow::Borrowed(typ), version)
+    }
+    /// Creates an instance of a service URN
+    pub const fn service(domain: &'static str, typ: &'static str, version: u32) -> Self {
+        URN::Service(Cow::Borrowed(domain), Cow::Borrowed(typ), version)
     }
 }
 
@@ -77,24 +84,29 @@ impl Into<SearchTarget> for URN {
 
 impl std::str::FromStr for URN {
     type Err = ParseURNError;
-    #[rustfmt::skip]
     fn from_str(str: &str) -> Result<Self, Self::Err> {
         let mut iter = str.split(':');
-        if iter.next() != Some("urn") { return Err(ParseURNError); }
+        if iter.next() != Some("urn") {
+            return Err(ParseURNError);
+        }
 
         let domain = iter.next().ok_or(ParseURNError)?.to_string().into();
         let urn_type = &iter.next().ok_or(ParseURNError)?;
         let typ = iter.next().ok_or(ParseURNError)?.to_string().into();
-        let version = iter.next().ok_or(ParseURNError)?
-            .parse::<u32>().map_err(|_| ParseURNError)?;
+        let version = iter
+            .next()
+            .ok_or(ParseURNError)?
+            .parse::<u32>()
+            .map_err(|_| ParseURNError)?;
 
-        if iter.next() != None { return Err(ParseURNError); }
-
+        if iter.next() != None {
+            return Err(ParseURNError);
+        }
 
         if urn_type.eq_ignore_ascii_case("service") {
-            Ok(URN::Service { domain , typ, version })
+            Ok(URN::Service(domain, typ, version))
         } else if urn_type.eq_ignore_ascii_case("device") {
-            Ok(URN::Device { domain , typ, version })
+            Ok(URN::Device(domain, typ, version))
         } else {
             Err(ParseURNError)
         }
@@ -117,19 +129,19 @@ mod tests {
 
         assert_eq!(
             "urn:schemas-upnp-org:device:ZonePlayer:1".parse(),
-            Ok(SearchTarget::URN(URN::Device {
-                domain: "schemas-upnp-org".into(),
-                typ: "ZonePlayer".into(),
-                version: 1,
-            }))
+            Ok(SearchTarget::URN(URN::Device(
+                "schemas-upnp-org".into(),
+                "ZonePlayer".into(),
+                1
+            )))
         );
         assert_eq!(
             "urn:schemas-sonos-com:service:Queue:2".parse(),
-            Ok(SearchTarget::URN(URN::Service {
-                domain: "schemas-sonos-com".into(),
-                typ: "Queue".into(),
-                version: 2
-            }))
+            Ok(SearchTarget::URN(URN::Service(
+                "schemas-sonos-com".into(),
+                "Queue".into(),
+                2
+            )))
         );
     }
 }

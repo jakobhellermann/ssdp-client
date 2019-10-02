@@ -16,6 +16,4 @@ travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
 
 [dependencies]
 async-std = "0.99.8"
-futures-preview = "0.3.0-alpha.18"
 futures-async-stream = "0.1.0-alpha.7"
-err-derive = { git = "https://gitlab.com/torkleyy/err-derive" }

@@ -29,9 +29,8 @@ async fn subscribe() -> Result<(), ssdp_client::Error> {
     let listener = TcpListener::bind(&addr).await?;
 
     println!("Listening on {}", addr);
-    #[for_await]
-    for stream in listener.incoming() {
-        stream?.copy_into(&mut io::stdout()).await?;
+    while let Some(stream) = listener.incoming().next().await {
+        io::copy(&mut stream?, &mut io::stdout()).await?;
         println!();
     }
 

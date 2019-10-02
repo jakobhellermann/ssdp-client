@@ -1,44 +1,104 @@
-use err_derive::Error;
-use std::{io, str::Utf8Error};
+use std::fmt;
+use std::io;
+use std::str::Utf8Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 /// The Error type
 pub enum Error {
     /// IO Error
-    #[error(display = "io error: {}", _0)]
-    IO(#[error(cause)] io::Error),
+    IO(io::Error),
     /// SSDP is not encoded properly
-    #[error(display = "utf8 error: {}", _0)]
-    Utf8Error(#[error(cause)] Utf8Error),
+    Utf8(Utf8Error),
     /// Missing header in the SSDP Response
-    #[error(display = "missing header: {}", _0)]
     MissingHeader(&'static str),
     /// Invalid header in the SSDP Response
-    #[error(display = "invalid header: {}", _0)]
     InvalidHeader(&'static str),
     /// Malformed search target in SSDP header
-    #[error(display = "{}", _0)]
-    ParseSearchTargetError(#[error(cause)] ParseSearchTargetError),
-    #[error(display = "failed to parse http response: {}", _0)]
+    ParseSearchTargetError(ParseSearchTargetError),
     /// Failed to parse HTTP response
     InvalidHTTP(&'static str),
-    #[error(display = "control point responded with '{}' exit code", _0)]
     /// Non-200 HTTP Status Code
     HTTPError(u32),
 }
 
-/// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Error, Eq, PartialEq)]
-#[error(display = "failed to parse urn")]
-pub struct ParseURNError;
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::IO(err) => write!(f, "io error: {}", err),
+            Error::Utf8(err) => write!(f, "utf8 decoding error: {}", err),
+            Error::MissingHeader(err) => write!(f, "missing header: {}", err),
+            Error::InvalidHeader(err) => write!(f, "invalid header: {}", err),
+            Error::ParseSearchTargetError(err) => write!(f, "{}", err),
+            Error::InvalidHTTP(err) => write!(f, "failed to parse http response: {}", err),
+            Error::HTTPError(err) => write!(
+                f,
+                "control point responded with non-zero exit code: {}",
+                err
+            ),
+        }
+    }
+}
+
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::IO(err) => Some(err),
+            Error::Utf8(err) => Some(err),
+            Error::ParseSearchTargetError(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Self {
+        Error::IO(err)
+    }
+}
+impl From<Utf8Error> for Error {
+    fn from(err: Utf8Error) -> Self {
+        Error::Utf8(err)
+    }
+}
+impl From<ParseSearchTargetError> for Error {
+    fn from(err: ParseSearchTargetError) -> Self {
+        Error::ParseSearchTargetError(err)
+    }
+}
 
 /// An error returned when parsing a search target using `from_str` fails
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
+pub struct ParseURNError;
+impl std::error::Error for ParseURNError {}
+impl fmt::Display for ParseURNError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "failed to parse URN")
+    }
+}
+
+/// An error returned when parsing a search target using `from_str` fails
+#[derive(Debug, Eq, PartialEq)]
 pub enum ParseSearchTargetError {
     /// Failed to parse URN in Search Target
-    #[error(display = "{}", _0)]
-    URN(#[error(cause)] ParseURNError),
+    URN(ParseURNError),
     /// Failed to parse Search Target
-    #[error(display = "failed to parse search target")]
     ST,
+}
+
+impl fmt::Display for ParseSearchTargetError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseSearchTargetError::URN(_) => write!(f, "invalid urn supplied"),
+            ParseSearchTargetError::ST => write!(f, "invalid search target format"),
+        }
+    }
+}
+impl std::error::Error for ParseSearchTargetError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        if let ParseSearchTargetError::URN(err) = self {
+            Some(err)
+        } else {
+            None
+        }
+    }
 }
