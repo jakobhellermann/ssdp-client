@@ -14,6 +14,24 @@ discover each other. SSDP can most commonly be found in devices that implement
 **Technical Specification:**
 http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v2.0.pdf
 
+# Example usage:
+
+```rust
+use std::time::Duration;
+use ssdp_client::SearchTarget;
+use futures_async_stream::for_await; // or pin_mut! the stream
+
+let search_target = SearchTarget::RootDevice;
+let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
+
+#[for_await]
+for response in responses {
+    println!("{:?}", response);
+}
+
+let st = ssdp::
+```
+
 License
 -------
 

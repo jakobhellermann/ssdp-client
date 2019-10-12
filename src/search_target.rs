@@ -43,11 +43,11 @@ impl std::str::FromStr for SearchTarget {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[allow(missing_docs)]
 /// Uniform Resource Name
-/// urn:$domain:$urn_type:$type_:$version
-/// urn:schemas-upnp-org:service:RenderingControl:1
+///
+/// e.g. `urn:schemas-upnp-org:service:RenderingControl:1`
 pub enum URN {
     Device(Cow<'static, str>, Cow<'static, str>, u32),
     Service(Cow<'static, str>, Cow<'static, str>, u32),
@@ -73,6 +73,33 @@ impl URN {
     /// Creates an instance of a service URN
     pub const fn service(domain: &'static str, typ: &'static str, version: u32) -> Self {
         URN::Service(Cow::Borrowed(domain), Cow::Borrowed(typ), version)
+    }
+
+    /// Extracts the `schemas-upnp-org` part of the
+    /// `urn:schemas-upnp-org:service:RenderingControl:1`
+    pub fn domain_name(&self) -> &str {
+        match self {
+            URN::Device(domain_name, _, _) => domain_name,
+            URN::Service(domain_name, _, _) => domain_name,
+        }
+    }
+
+    /// Extracts the `RenderingControl` part of the
+    /// `urn:schemas-upnp-org:service:RenderingControl:1`
+    pub fn typ(&self) -> &str {
+        match self {
+            URN::Device(_, typ, _) => typ,
+            URN::Service(_, typ, _) => typ,
+        }
+    }
+
+    /// Extracts the `1` part of the
+    /// `urn:schemas-upnp-org:service:RenderingControl:1`
+    pub fn version(&self) -> u32 {
+        match self {
+            URN::Device(_, _, v) => *v,
+            URN::Service(_, _, v) => *v,
+        }
     }
 }
 

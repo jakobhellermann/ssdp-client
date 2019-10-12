@@ -15,5 +15,8 @@ edition = "2018"
 travis-ci = { repository = "jjakobh/ssdp-client", branch = "master" }
 
 [dependencies]
-async-std = "0.99.8"
+async-std = "0.99.11"
 futures-async-stream = "0.1.0-alpha.7"
+
+[dev-dependencies]
+pin-utils = "0.1.0-alpha.4"
