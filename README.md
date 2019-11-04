@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/jjakobh/ssdp-client.svg?branch=master)](https://travis-ci.com/jjakobh/ssdp-client)
+[![Actions Status](https://github.com/jjakobh/ssdp-client/workflows/CI/badge.svg)](https://github.com/jjakobh/ssdp-client/actions)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jjakobh/ssdp-client.svg)
 [![Crates.io](https://img.shields.io/crates/v/ssdp-client.svg)](https://crates.io/crates/ssdp-client)
 
@@ -28,8 +29,6 @@ let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).a
 for response in responses {
     println!("{:?}", response);
 }
-
-let st = ssdp::
 ```
 
 License
