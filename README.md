@@ -16,26 +16,19 @@ http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v2.0.pdf
 
 # Example usage:
 
-# Example
-```rust,norun
-use ssdp_client::URN;
+```rust
+use futures::prelude::*;
 use std::time::Duration;
+use ssdp_client::SearchTarget;
 
-let search_target = URN::device("schemas-upnp-org", "ZonePlayer", 1).into();
-let timeout = Duration::from_secs(3);
-let responses = ssdp_client::search(&search_target, timeout, 2).await?;
+let search_target = SearchTarget::RootDevice;
+let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
 pin_utils::pin_mut!(responses);
 
 while let Some(response) = responses.next().await {
-    println!("{:?}", response);
+    println!("{:?}", response?);
 }
 ```
-
-# Features:
-Without the `nightly` feature [`ssdp-client::search`](fn.search.html) is pretty slow
-because it waits for all responses and the timeout before sending them all in one batch.
-The feature currently only works on nightly due to the `futures-async-stream` dependency.
-It also pulls in `syn` and `quote` expect compile times to take longer.
 
 License
 -------

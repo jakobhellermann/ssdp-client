@@ -1,8 +1,11 @@
 use crate::{Error, SearchTarget};
 
+use async_std::io;
 use async_std::net::UdpSocket;
-use async_std::prelude::*;
+use async_std::stream::Stream;
+use genawaiter::sync::{Co, Gen};
 
+use std::io::ErrorKind::TimedOut;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -59,31 +62,39 @@ MX: {}\r\n\r\n",
     );
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
-    #[cfg(not(feature = "nightly"))]
-    return search_socket_stream(socket, timeout).await;
-    #[cfg(feature = "nightly")]
-    return Ok(search_socket_stream(socket, timeout));
+    Ok(Gen::new(move |co| socket_stream(socket, timeout, co)))
 }
 
-#[cfg(not(feature = "nightly"))]
-async fn search_socket_stream(
+macro_rules! yield_try {
+    ( $co:expr => $expr:expr ) => {
+        match $expr {
+            Ok(val) => val,
+            Err(e) => {
+                $co.yield_(Err(e.into())).await;
+                continue;
+            }
+        }
+    };
+}
+
+async fn socket_stream(
     socket: UdpSocket,
     timeout: Duration,
-) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
-    use async_std::io;
-    use std::io::ErrorKind::TimedOut;
-
-    let mut responses = Vec::new();
+    co: Co<Result<SearchResponse, Error>>,
+) {
     loop {
         let mut buf = [0u8; 2048];
         let text = match io::timeout(timeout, socket.recv(&mut buf)).await {
             Ok(read) if read == 2048 => panic!(INSUFFICIENT_BUFFER_MSG),
-            Ok(read) => std::str::from_utf8(&buf[..read])?,
+            Ok(read) => yield_try!(co => std::str::from_utf8(&buf[..read])),
             Err(e) if e.kind() == TimedOut => break,
-            Err(e) => return Err(e.into()),
+            Err(e) => {
+                co.yield_(Err(e.into())).await;
+                continue;
+            }
         };
 
-        let headers = crate::parse_headers(text)?;
+        let headers = yield_try!(co => parse_headers(text));
 
         let mut location = None;
         let mut st = None;
@@ -102,23 +113,46 @@ async fn search_socket_stream(
             }
         }
 
-        let location = location
-            .ok_or(Error::MissingHeader("location"))?
-            .to_string();
-        let st = st.ok_or(Error::MissingHeader("st"))?.parse()?;
-        let usn = usn.ok_or(Error::MissingHeader("urn"))?.to_string();
-        let server = server.ok_or(Error::MissingHeader("server"))?.to_string();
+        let location = yield_try!(co => location
+            .ok_or(Error::MissingHeader("location")))
+        .to_string();
+        let st = yield_try!(co => yield_try!(co => st.ok_or(Error::MissingHeader("st"))).parse::<SearchTarget>());
+        let usn = yield_try!(co => usn.ok_or(Error::MissingHeader("urn"))).to_string();
+        let server = yield_try!(co => server.ok_or(Error::MissingHeader("server"))).to_string();
 
-        responses.push(SearchResponse {
+        co.yield_(Ok(SearchResponse {
             location,
             st,
             usn,
             server,
-        });
+        }))
+        .await;
     }
-
-    Ok(async_std::stream::from_iter(responses.into_iter().map(Ok)))
 }
 
-#[cfg(feature = "nightly")]
-use crate::search_unstable::search_socket_stream;
+fn parse_headers(response: &str) -> Result<impl Iterator<Item = (&str, &str)>, Error> {
+    let mut response = response.split("\r\n");
+    let status_code = response
+        .next()
+        .ok_or(Error::InvalidHTTP("http response is empty"))?
+        .trim_start_matches("HTTP/1.1 ")
+        .chars()
+        .take_while(|x| x.is_numeric())
+        .collect::<String>()
+        .parse::<u32>()
+        .map_err(|_| Error::InvalidHTTP("status code is not a number"))?;
+
+    if status_code != 200 {
+        return Err(Error::HTTPError(status_code));
+    }
+
+    let iter = response.filter_map(|l| {
+        let mut split = l.splitn(2, ':');
+        match (split.next(), split.next()) {
+            (Some(header), Some(value)) => Some((header, value.trim())),
+            _ => None,
+        }
+    });
+
+    Ok(iter)
+}
