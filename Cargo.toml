@@ -15,8 +15,8 @@ edition = "2018"
 unstable-stream = ["futures-async-stream"]
 
 [dependencies]
-async-std = "0.99.11"
-futures-async-stream = { version = "0.1.0-alpha.7", optional = true }
+async-std = "1"
+futures-async-stream = { version = "0.1", optional = true }
 
 [dev-dependencies]
 pin-utils = "0.1.0-alpha.4"
