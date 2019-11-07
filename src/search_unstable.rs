@@ -2,6 +2,7 @@ use crate::{Error, SearchTarget};
 
 use async_std::io;
 use async_std::net::UdpSocket;
+use async_std::stream::Stream;
 
 use std::io::ErrorKind::TimedOut;
 use std::net::SocketAddr;
@@ -40,14 +41,11 @@ impl SearchResponse {
 /// Search for SSDP control points within a network.
 /// Control Points will wait a random amount of time between 0 and mx seconds before responing to avoid flooding the requester with responses.
 /// Therefore, the timeout should be at least mx seconds.
-///
-/// By default it will return a `Vec` of [`SearchResponse`](struct.SearchResponse.html)s, but if you
-/// enable the `unstable-stream` feature you get a Stream of `Result<SearchResponse, Error>`.
 pub async fn search(
     search_target: &SearchTarget,
     timeout: Duration,
     mx: usize,
-) -> Result<Vec<SearchResponse>, Error> {
+) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
@@ -63,20 +61,17 @@ MX: {}\r\n\r\n",
     );
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
-    search_socket_stream(socket, timeout).await
+    Ok(search_socket_stream(socket, timeout))
 }
 
-async fn search_socket_stream(
-    socket: UdpSocket,
-    timeout: Duration,
-) -> Result<Vec<SearchResponse>, Error> {
-    let mut responses = Vec::new();
+#[futures_async_stream::async_try_stream(ok = SearchResponse, error = Error)]
+async fn search_socket_stream(socket: UdpSocket, timeout: Duration) {
     loop {
         let mut buf = [0u8; 2048];
         let text = match io::timeout(timeout, socket.recv(&mut buf)).await {
             Ok(read) if read == 2048 => panic!(INSUFFICIENT_BUFFER_MSG),
             Ok(read) => std::str::from_utf8(&buf[..read])?,
-            Err(e) if e.kind() == TimedOut => break Ok(responses),
+            Err(e) if e.kind() == TimedOut => break,
             Err(e) => return Err(e.into()),
         };
 
@@ -106,11 +101,11 @@ async fn search_socket_stream(
         let usn = usn.ok_or(Error::MissingHeader("urn"))?.to_string();
         let server = server.ok_or(Error::MissingHeader("server"))?.to_string();
 
-        responses.push(SearchResponse {
+        yield SearchResponse {
             location,
             st,
             usn,
             server,
-        });
+        };
     }
 }

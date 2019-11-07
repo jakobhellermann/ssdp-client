@@ -20,16 +20,19 @@ http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v2.0.pdf
 ```rust
 use std::time::Duration;
 use ssdp_client::SearchTarget;
-use futures_async_stream::for_await; // or pin_mut! the stream
 
 let search_target = SearchTarget::RootDevice;
 let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
 
-#[for_await]
 for response in responses {
     println!("{:?}", response);
 }
 ```
+
+# Features:
+The `unstable-stream` feature makes `ssdp-client::search` return a `Stream` of `Result<SearchResponse, Error>` instead of a `Vec<_>`.
+This currently only works on nightly due to the `futures-async-stream` dependency.
+It also pulls in `syn` and `quote` expect compile times to take longer.
 
 License
 -------
