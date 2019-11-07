@@ -29,6 +29,11 @@
 //! # return Ok(());
 //! # }
 //! ```
+//!
+//! # Features:
+//! The `unstable-stream` feature makes [`ssdp-client::search`](fn.search.html) return a `Stream` of `Result<SearchResponse, Error>` instead of a `Vec<_>`.
+//! This currently only works on nightly due to the `futures-async-stream` dependency.
+//! It also pulls in `syn` and `quote` expect compile times to take longer.
 
 // ```rust,norun
 // # #![feature(proc_macro_hygiene, stmt_expr_attributes)]
@@ -49,7 +54,7 @@
 // ```
 
 /// SSDP Error types
-pub mod error;
+mod error;
 #[cfg_attr(feature = "unstable-stream", path = "search_unstable.rs")]
 mod search;
 mod search_target;
