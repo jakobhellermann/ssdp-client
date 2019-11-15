@@ -3,35 +3,6 @@ on: [push, pull_request]
 name: CI
 
 jobs:
-  check-stable:
-    name: Check Stable
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-
-  check-nightly:
-    name: Check Nightly with `unstable`
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --features unstable-stream
-
   test-stable:
     name: Test Stable
     runs-on: ubuntu-latest
@@ -47,7 +18,7 @@ jobs:
           command: test
 
   test-nightly:
-    name: Test Nightly with `unstable`
+    name: Test Nightly with `nighlty` feature
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -59,7 +30,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features --tests
+          args: --all-features
 
   fmt:
     name: Rustfmt

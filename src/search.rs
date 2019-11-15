@@ -1,21 +1,20 @@
 use crate::{Error, SearchTarget};
 
-use async_std::io;
 use async_std::net::UdpSocket;
+use async_std::prelude::*;
 
-use std::io::ErrorKind::TimedOut;
 use std::net::SocketAddr;
 use std::time::Duration;
 
-const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
+pub(crate) const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 
 #[derive(Debug)]
 /// Response given by ssdp control point
 pub struct SearchResponse {
-    location: String,
-    st: SearchTarget,
-    usn: String,
-    server: String,
+    pub(crate) location: String,
+    pub(crate) st: SearchTarget,
+    pub(crate) usn: String,
+    pub(crate) server: String,
 }
 
 impl SearchResponse {
@@ -40,14 +39,11 @@ impl SearchResponse {
 /// Search for SSDP control points within a network.
 /// Control Points will wait a random amount of time between 0 and mx seconds before responing to avoid flooding the requester with responses.
 /// Therefore, the timeout should be at least mx seconds.
-///
-/// By default it will return a `Vec` of [`SearchResponse`](struct.SearchResponse.html)s, but if you
-/// enable the `unstable-stream` feature you get a Stream of `Result<SearchResponse, Error>`.
 pub async fn search(
     search_target: &SearchTarget,
     timeout: Duration,
     mx: usize,
-) -> Result<Vec<SearchResponse>, Error> {
+) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
@@ -63,20 +59,27 @@ MX: {}\r\n\r\n",
     );
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
-    search_socket_stream(socket, timeout).await
+    #[cfg(not(feature = "nightly"))]
+    return search_socket_stream(socket, timeout).await;
+    #[cfg(feature = "nightly")]
+    return Ok(search_socket_stream(socket, timeout));
 }
 
+#[cfg(not(feature = "nightly"))]
 async fn search_socket_stream(
     socket: UdpSocket,
     timeout: Duration,
-) -> Result<Vec<SearchResponse>, Error> {
+) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
+    use async_std::io;
+    use std::io::ErrorKind::TimedOut;
+
     let mut responses = Vec::new();
     loop {
         let mut buf = [0u8; 2048];
         let text = match io::timeout(timeout, socket.recv(&mut buf)).await {
             Ok(read) if read == 2048 => panic!(INSUFFICIENT_BUFFER_MSG),
             Ok(read) => std::str::from_utf8(&buf[..read])?,
-            Err(e) if e.kind() == TimedOut => break Ok(responses),
+            Err(e) if e.kind() == TimedOut => break,
             Err(e) => return Err(e.into()),
         };
 
@@ -113,4 +116,9 @@ async fn search_socket_stream(
             server,
         });
     }
+
+    Ok(async_std::stream::from_iter(responses.into_iter().map(Ok)))
 }
+
+#[cfg(feature = "nightly")]
+use crate::search_unstable::search_socket_stream;

@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "unstable-stream", feature(generators, proc_macro_hygiene))]
+#![cfg_attr(feature = "nightly", feature(generators, proc_macro_hygiene))]
 #![warn(
     missing_docs,
     nonstandard_style,
@@ -17,13 +17,16 @@
 //! # Example
 //! ```rust,norun
 //! # async fn f() -> Result<(), ssdp_client::Error> {
+//! # use async_std::prelude::*;
+//! use ssdp_client::URN;
 //! use std::time::Duration;
-//! use ssdp_client::SearchTarget;
 //!
-//! let search_target = SearchTarget::RootDevice;
-//! let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
+//! let search_target = URN::device("schemas-upnp-org", "ZonePlayer", 1).into();
+//! let timeout = Duration::from_secs(3);
+//! let responses = ssdp_client::search(&search_target, timeout, 2).await?;
+//! pin_utils::pin_mut!(responses);
 //!
-//! for response in responses {
+//! while let Some(response) = responses.next().await {
 //!     println!("{:?}", response);
 //! }
 //! # return Ok(());
@@ -31,33 +34,17 @@
 //! ```
 //!
 //! # Features:
-//! The `unstable-stream` feature makes [`ssdp-client::search`](fn.search.html) return a `Stream` of `Result<SearchResponse, Error>` instead of a `Vec<_>`.
-//! This currently only works on nightly due to the `futures-async-stream` dependency.
+//! Without the `nightly` feature [`ssdp-client::search`](fn.search.html) is pretty slow
+//! because it waits for all responses and the timeout before sending them all in one batch.
+//! The feature currently only works on nightly due to the `futures-async-stream` dependency.
 //! It also pulls in `syn` and `quote` expect compile times to take longer.
-
-// ```rust,norun
-// # #![feature(proc_macro_hygiene, stmt_expr_attributes)]
-// # async fn f() -> Result<(), ssdp_client::Error> {
-// use std::time::Duration;
-// use ssdp_client::SearchTarget;
-// use futures_async_stream::for_await;
-//
-// let search_target = SearchTarget::RootDevice;
-// let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
-//
-// #[for_await]
-// for response in responses {
-//     println!("{:?}", response);
-// }
-// # return Ok(());
-// # }
-// ```
 
 /// SSDP Error types
 mod error;
-#[cfg_attr(feature = "unstable-stream", path = "search_unstable.rs")]
 mod search;
 mod search_target;
+#[cfg(feature = "nightly")]
+mod search_unstable;
 
 pub use error::Error;
 pub use search::{search, SearchResponse};
