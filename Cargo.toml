@@ -12,8 +12,9 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [dependencies]
-async-std = "0.99"
-genawaiter = { git = "https://github.com/whatisaphone/genawaiter", branch = "feat/stream" }
+async-std = "1"
+log = "0.4"
+genawaiter = { version = "0.2", features = ["futures03"] }
 
 [dev-dependencies]
 futures = "0.3"

@@ -9,15 +9,15 @@ use std::io::ErrorKind::TimedOut;
 use std::net::SocketAddr;
 use std::time::Duration;
 
-pub(crate) const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
+const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 
 #[derive(Debug)]
 /// Response given by ssdp control point
 pub struct SearchResponse {
-    pub(crate) location: String,
-    pub(crate) st: SearchTarget,
-    pub(crate) usn: String,
-    pub(crate) server: String,
+    location: String,
+    st: SearchTarget,
+    usn: String,
+    server: String,
 }
 
 impl SearchResponse {
@@ -85,7 +85,10 @@ async fn socket_stream(
     loop {
         let mut buf = [0u8; 2048];
         let text = match io::timeout(timeout, socket.recv(&mut buf)).await {
-            Ok(read) if read == 2048 => panic!(INSUFFICIENT_BUFFER_MSG),
+            Ok(read) if read == 2048 => {
+                log::warn!("{}", INSUFFICIENT_BUFFER_MSG);
+                continue;
+            }
             Ok(read) => yield_try!(co => std::str::from_utf8(&buf[..read])),
             Err(e) if e.kind() == TimedOut => break,
             Err(e) => {
