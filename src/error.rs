@@ -1,6 +1,4 @@
-use std::fmt;
-use std::io;
-use std::str::Utf8Error;
+use std::{fmt, io, str::Utf8Error};
 
 #[derive(Debug)]
 /// The Error type

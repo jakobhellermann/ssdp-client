@@ -1,6 +1,5 @@
 use crate::error::{ParseSearchTargetError, ParseURNError};
-use std::borrow::Cow;
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 /// Specify what SSDP control points to search for

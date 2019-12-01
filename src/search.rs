@@ -1,13 +1,9 @@
 use crate::{Error, SearchTarget};
 
-use async_std::io;
-use async_std::net::UdpSocket;
-use async_std::stream::Stream;
+use async_std::{io, net::UdpSocket, stream::Stream};
 use genawaiter::sync::{Co, Gen};
 
-use std::io::ErrorKind::TimedOut;
-use std::net::SocketAddr;
-use std::time::Duration;
+use std::{io::ErrorKind::TimedOut, net::SocketAddr, time::Duration};
 
 const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 
