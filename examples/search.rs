@@ -2,7 +2,7 @@ use futures::prelude::*;
 use ssdp_client::URN;
 use std::time::Duration;
 
-#[async_attributes::main]
+#[tokio::main]
 async fn main() -> Result<(), ssdp_client::Error> {
     let search_target = URN::device("schemas-upnp-org", "ZonePlayer", 1).into();
     let timeout = Duration::from_secs(3);

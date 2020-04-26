@@ -1,9 +1,8 @@
 use crate::{Error, SearchTarget};
 
-use async_std::{io, net::UdpSocket, stream::Stream};
 use genawaiter::sync::{Co, Gen};
-
-use std::{io::ErrorKind::TimedOut, net::SocketAddr, time::Duration};
+use std::{net::SocketAddr, time::Duration};
+use tokio::{net::UdpSocket, stream::Stream};
 
 const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 
@@ -46,7 +45,7 @@ pub async fn search(
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
-    let socket = UdpSocket::bind(&bind_addr).await?;
+    let mut socket = UdpSocket::bind(&bind_addr).await?;
 
     let msg = format!(
         "M-SEARCH * HTTP/1.1\r
@@ -74,23 +73,25 @@ macro_rules! yield_try {
 }
 
 async fn socket_stream(
-    socket: UdpSocket,
+    mut socket: UdpSocket,
     timeout: Duration,
     co: Co<Result<SearchResponse, Error>>,
 ) {
     loop {
         let mut buf = [0u8; 2048];
-        let text = match io::timeout(timeout, socket.recv(&mut buf)).await {
-            Ok(read) if read == 2048 => {
-                log::warn!("{}", INSUFFICIENT_BUFFER_MSG);
-                continue;
-            }
-            Ok(read) => yield_try!(co => std::str::from_utf8(&buf[..read])),
-            Err(e) if e.kind() == TimedOut => break,
-            Err(e) => {
-                co.yield_(Err(e.into())).await;
-                continue;
-            }
+        let text = match tokio::time::timeout(timeout, socket.recv(&mut buf)).await {
+            Err(_) => break,
+            Ok(res) => match res {
+                Ok(read) if read == 2048 => {
+                    log::warn!("{}", INSUFFICIENT_BUFFER_MSG);
+                    continue;
+                }
+                Ok(read) => yield_try!(co => std::str::from_utf8(&buf[..read])),
+                Err(e) => {
+                    co.yield_(Err(e.into())).await;
+                    continue;
+                }
+            },
         };
 
         let headers = yield_try!(co => parse_headers(text));
