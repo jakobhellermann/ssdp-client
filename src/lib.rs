@@ -21,8 +21,7 @@
 //! use ssdp_client::SearchTarget;
 //!
 //! let search_target = SearchTarget::RootDevice;
-//! let responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
-//! pin_utils::pin_mut!(responses);
+//! let mut responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
 //!
 //! while let Some(response) = responses.next().await {
 //!     println!("{:?}", response?);

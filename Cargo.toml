@@ -19,4 +19,3 @@ genawaiter = { version = "0.99", default-features = false, features = ["futures0
 [dev-dependencies]
 futures = "0.3"
 tokio = { version = "0.2", features = ["macros"] }
-pin-utils = "0.1.0-alpha.4"
