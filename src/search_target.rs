@@ -13,6 +13,8 @@ pub enum SearchTarget {
     /// e.g. schemas-upnp-org:device:ZonePlayer:1
     /// or schemas-sonos-com:service:Queue:1
     URN(URN),
+    /// e.g. roku:ecp
+    Custom(String, String),
 }
 impl fmt::Display for SearchTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -21,6 +23,7 @@ impl fmt::Display for SearchTarget {
             SearchTarget::RootDevice => write!(f, "upnp:rootdevice"),
             SearchTarget::UUID(uuid) => write!(f, "uuid:{}", uuid),
             SearchTarget::URN(urn) => write!(f, "{}", urn),
+            SearchTarget::Custom(key, value) => write!(f, "{}:{}", key, value),
         }
     }
 }
@@ -35,9 +38,16 @@ impl std::str::FromStr for SearchTarget {
             s if s.starts_with("uuid") => {
                 SearchTarget::UUID(s.trim_start_matches("uuid:").to_string())
             }
-            s => URN::from_str(s)
+            s if s.starts_with("urn") => URN::from_str(s)
                 .map(SearchTarget::URN)
                 .map_err(ParseSearchTargetError::URN)?,
+            s => {
+                let split: Vec<&str> = s.split(":").collect();
+                if split.len() != 2 {
+                    return Err(ParseSearchTargetError::ST);
+                }
+                SearchTarget::Custom(split[0].into(), split[1].into())
+            }
         })
     }
 }
@@ -168,6 +178,10 @@ mod tests {
                 "Queue".into(),
                 2
             )))
+        );
+        assert_eq!(
+            "roku:ecp".parse(),
+            Ok(SearchTarget::Custom("roku".into(), "ecp".into()))
         );
     }
 }
