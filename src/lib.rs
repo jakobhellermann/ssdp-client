@@ -14,7 +14,7 @@
 //! `UPnP` as it is used as the discovery mechanism for that standard.
 //!
 //! # Example
-//! ```rust,norun
+//! ```rust,no_run
 //! # async fn f() -> Result<(), ssdp_client::Error> {
 //! use futures::prelude::*;
 //! use std::time::Duration;
