@@ -45,7 +45,7 @@ pub async fn search(
     let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
-    let mut socket = UdpSocket::bind(&bind_addr).await?;
+    let socket = UdpSocket::bind(&bind_addr).await?;
 
     let msg = format!(
         "M-SEARCH * HTTP/1.1\r
@@ -73,7 +73,7 @@ macro_rules! yield_try {
 }
 
 async fn socket_stream(
-    mut socket: UdpSocket,
+    socket: UdpSocket,
     timeout: Duration,
     co: Co<Result<SearchResponse, Error>>,
 ) {

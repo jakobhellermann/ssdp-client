@@ -1,6 +1,6 @@
 [package]
 name = "ssdp-client"
-version = "0.5.5"
+version = "0.5.6"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 description = "An asynchronous library for discovering, notifying and subscribing to devices and services on a network."
 categories = ["network-programming", "asynchronous"]
@@ -12,10 +12,10 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [dependencies]
-tokio = { version = "0.2", features = ["udp", "stream", "time"] }
+tokio = { version = "0.3", features = ["net", "stream", "time"] }
 log = "0.4"
 genawaiter = { version = "0.99", default-features = false, features = ["futures03"] }
 
 [dev-dependencies]
 futures = "0.3"
-tokio = { version = "0.2", features = ["macros"] }
+tokio = { version = "0.3", features = ["macros", "rt-multi-thread"] }
