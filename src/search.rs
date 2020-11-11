@@ -34,6 +34,24 @@ impl SearchResponse {
     }
 }
 
+#[cfg(not(windows))]
+async fn get_bind_addr() -> Result<SocketAddr, std::io::Error> {
+    ([0, 0, 0, 0], 0).into()
+}
+
+#[cfg(windows)]
+async fn get_bind_addr() -> Result<SocketAddr, std::io::Error> {
+    // Windows 10 is multihomed so that the address that is used for the broadcast send is not guaranteed to be your local ip address, it can be any of the virtual interfaces instead.
+    // Thanks to @dheijl for figuring this out <3 (https://github.com/jakobhellermann/ssdp-client/issues/3#issuecomment-687098826)
+    let any: SocketAddr = ([0, 0, 0, 0], 0).into();
+    let socket = UdpSocket::bind(any).await?;
+    let googledns: SocketAddr = ([8, 8, 8, 8], 80).into();
+    socket.connect(googledns).await?;
+    let bind_addr = socket.local_addr()?;
+
+    Ok(bind_addr)
+}
+
 /// Search for SSDP control points within a network.
 /// Control Points will wait a random amount of time between 0 and mx seconds before responing to avoid flooding the requester with responses.
 /// Therefore, the timeout should be at least mx seconds.
@@ -42,7 +60,7 @@ pub async fn search(
     timeout: Duration,
     mx: usize,
 ) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
-    let bind_addr: SocketAddr = ([0, 0, 0, 0], 0).into();
+    let bind_addr: SocketAddr = get_bind_addr().await?;
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
     let socket = UdpSocket::bind(&bind_addr).await?;
