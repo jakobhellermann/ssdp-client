@@ -1,6 +1,6 @@
 [package]
 name = "ssdp-client"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 description = "An asynchronous library for discovering, notifying and subscribing to devices and services on a network."
 categories = ["network-programming", "asynchronous"]
