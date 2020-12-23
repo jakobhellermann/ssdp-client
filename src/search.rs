@@ -2,7 +2,8 @@ use crate::{Error, SearchTarget};
 
 use genawaiter::sync::{Co, Gen};
 use std::{net::SocketAddr, time::Duration};
-use tokio::{net::UdpSocket, stream::Stream};
+use tokio::net::UdpSocket;
+use futures_core::stream::Stream;
 
 const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 
