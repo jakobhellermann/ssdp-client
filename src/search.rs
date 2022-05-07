@@ -6,6 +6,7 @@ use std::{net::SocketAddr, time::Duration};
 use tokio::net::UdpSocket;
 
 const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
+const DEFAULT_SEARCH_TTL: u32 = 2;
 
 #[derive(Debug)]
 /// Response given by ssdp control point
@@ -60,11 +61,13 @@ pub async fn search(
     search_target: &SearchTarget,
     timeout: Duration,
     mx: usize,
+    ttl: Option<u32>,
 ) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
     let bind_addr: SocketAddr = get_bind_addr().await?;
     let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
 
     let socket = UdpSocket::bind(&bind_addr).await?;
+    socket.set_multicast_ttl_v4(ttl.unwrap_or(DEFAULT_SEARCH_TTL)).ok();
 
     let msg = format!(
         "M-SEARCH * HTTP/1.1\r
