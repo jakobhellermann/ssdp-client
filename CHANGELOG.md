@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.0
+- Add TTL parameter to `search` and set default according to spec (thanks @gabrielmagno https://github.com/jakobhellermann/ssdp-client/pull/8)
+
 ## 0.6.2
 - added windows support thanks to @dheijl ([5a70069](https://github.com/jakobhellermann/ssdp-client/commit/5a700693e9cef4f1fe8c069311209fddf59b0596)) 
  
