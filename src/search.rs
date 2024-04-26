@@ -2,7 +2,7 @@ use crate::{Error, SearchTarget};
 
 use futures_core::stream::Stream;
 use genawaiter::sync::{Co, Gen};
-use std::{net::SocketAddr, time::Duration};
+use std::{collections::HashMap, net::SocketAddr, time::Duration};
 use tokio::net::UdpSocket;
 
 const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
@@ -15,6 +15,7 @@ pub struct SearchResponse {
     st: SearchTarget,
     usn: String,
     server: String,
+    extra_headers: HashMap<String, String>,
 }
 
 impl SearchResponse {
@@ -33,6 +34,10 @@ impl SearchResponse {
     /// Server (user agent)
     pub fn server(&self) -> &str {
         &self.server
+    }
+    /// Other Custom header
+    pub fn extra_header(&self, key: &str) -> Option<&str> {
+        self.extra_headers.get(key).map(|x| x.as_str())
     }
 }
 
@@ -124,6 +129,7 @@ async fn socket_stream(
         let mut st = None;
         let mut usn = None;
         let mut server = None;
+        let mut extra_headers = HashMap::new();
 
         for (header, value) in headers {
             if header.eq_ignore_ascii_case("location") {
@@ -134,6 +140,8 @@ async fn socket_stream(
                 usn = Some(value);
             } else if header.eq_ignore_ascii_case("server") {
                 server = Some(value);
+            } else {
+                extra_headers.insert(header.to_owned(), value.to_owned());
             }
         }
 
@@ -149,6 +157,7 @@ async fn socket_stream(
             st,
             usn,
             server,
+            extra_headers,
         }))
         .await;
     }
