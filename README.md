@@ -22,7 +22,7 @@ use std::time::Duration;
 use ssdp_client::SearchTarget;
 
 let search_target = SearchTarget::RootDevice;
-let mut responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2).await?;
+let mut responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2, None).await?;
 
 while let Some(response) = responses.next().await {
     println!("{:?}", response?);
