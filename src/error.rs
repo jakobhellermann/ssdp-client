@@ -22,16 +22,15 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::IO(err) => write!(f, "io error: {}", err),
-            Error::Utf8(err) => write!(f, "utf8 decoding error: {}", err),
-            Error::MissingHeader(err) => write!(f, "missing header: {}", err),
-            Error::InvalidHeader(err) => write!(f, "invalid header: {}", err),
-            Error::ParseSearchTargetError(err) => write!(f, "{}", err),
-            Error::InvalidHTTP(err) => write!(f, "failed to parse http response: {}", err),
+            Error::IO(err) => write!(f, "io error: {err}"),
+            Error::Utf8(err) => write!(f, "utf8 decoding error: {err}"),
+            Error::MissingHeader(err) => write!(f, "missing header: {err}"),
+            Error::InvalidHeader(err) => write!(f, "invalid header: {err}"),
+            Error::ParseSearchTargetError(err) => write!(f, "{err}"),
+            Error::InvalidHTTP(err) => write!(f, "failed to parse http response: {err}"),
             Error::HTTPError(err) => write!(
                 f,
-                "control point responded with non-zero exit code: {}",
-                err
+                "control point responded with non-zero exit code: {err}"
             ),
         }
     }
@@ -78,6 +77,7 @@ impl fmt::Display for ParseURNError {
 #[derive(Debug, Eq, PartialEq)]
 pub enum ParseSearchTargetError {
     /// Failed to parse URN in Search Target
+    #[allow(clippy::upper_case_acronyms)]
     URN(ParseURNError),
     /// Failed to parse Search Target
     ST,

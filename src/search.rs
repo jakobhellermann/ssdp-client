@@ -80,9 +80,8 @@ pub async fn search(
         "M-SEARCH * HTTP/1.1\r
 Host:239.255.255.250:1900\r
 Man:\"ssdp:discover\"\r
-ST: {}\r
-MX: {}\r\n\r\n",
-        search_target, mx
+ST: {search_target}\r
+MX: {mx}\r\n\r\n"
     );
     socket.send_to(msg.as_bytes(), &broadcast_address).await?;
 
@@ -111,8 +110,8 @@ async fn socket_stream(
         let text = match tokio::time::timeout(timeout, socket.recv(&mut buf)).await {
             Err(_) => break,
             Ok(res) => match res {
-                Ok(read) if read == 2048 => {
-                    log::warn!("{}", INSUFFICIENT_BUFFER_MSG);
+                Ok(2024) => {
+                    log::warn!("{INSUFFICIENT_BUFFER_MSG}");
                     continue;
                 }
                 Ok(read) => yield_try!(co => std::str::from_utf8(&buf[..read])),

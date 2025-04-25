@@ -21,9 +21,9 @@ impl fmt::Display for SearchTarget {
         match self {
             SearchTarget::All => write!(f, "ssdp:all"),
             SearchTarget::RootDevice => write!(f, "upnp:rootdevice"),
-            SearchTarget::UUID(uuid) => write!(f, "uuid:{}", uuid),
-            SearchTarget::URN(urn) => write!(f, "{}", urn),
-            SearchTarget::Custom(key, value) => write!(f, "{}:{}", key, value),
+            SearchTarget::UUID(uuid) => write!(f, "uuid:{uuid}"),
+            SearchTarget::URN(urn) => write!(f, "{urn}"),
+            SearchTarget::Custom(key, value) => write!(f, "{key}:{value}"),
         }
     }
 }
@@ -65,10 +65,10 @@ impl fmt::Display for URN {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             URN::Device(domain, typ, version) => {
-                write!(f, "urn:{}:device:{}:{}", domain, typ, version)
+                write!(f, "urn:{domain}:device:{typ}:{version}")
             }
             URN::Service(domain, typ, version) => {
-                write!(f, "urn:{}:service:{}:{}", domain, typ, version)
+                write!(f, "urn:{domain}:service:{typ}:{version}")
             }
         }
     }
@@ -112,9 +112,9 @@ impl URN {
     }
 }
 
-impl Into<SearchTarget> for URN {
-    fn into(self) -> SearchTarget {
-        SearchTarget::URN(self)
+impl From<URN> for SearchTarget {
+    fn from(val: URN) -> Self {
+        SearchTarget::URN(val)
     }
 }
 
@@ -135,7 +135,7 @@ impl std::str::FromStr for URN {
             .parse::<u32>()
             .map_err(|_| ParseURNError)?;
 
-        if iter.next() != None {
+        if iter.next().is_some() {
             return Err(ParseURNError);
         }
 
