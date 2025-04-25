@@ -14,7 +14,10 @@ async fn main() -> Result<(), ssdp_client::Error> {
         println!("  - location: {}", response.location());
         println!("  - usn: {}", response.usn());
         println!("  - server: {}", response.server());
-        println!("  - properties: {:?}", response.extra_header("PROPERTIES.TEST"));
+        println!(
+            "  - properties: {:?}",
+            response.extra_header("PROPERTIES.TEST")
+        );
     }
 
     Ok(())
