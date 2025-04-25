@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+- capture extra headers (#10 by @wfeii1980)
+
+## 2.0.0
+- add new parameter to `search` function to specify `TTL`
+
 ## 1.0.0
 - Add TTL parameter to `search` and set default according to spec (thanks @gabrielmagno https://github.com/jakobhellermann/ssdp-client/pull/8)
 
