@@ -21,11 +21,15 @@ use futures::prelude::*;
 use std::time::Duration;
 use ssdp_client::SearchTarget;
 
-let search_target = SearchTarget::RootDevice;
-let mut responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2, None).await?;
+#[tokio::main]
+async fn mian() {
+    let search_target = SearchTarget::RootDevice;
+    let bind_addr = ([192, 168, 1, 10], 1900).into();
+    let mut responses = ssdp_client::search(&search_target, Duration::from_secs(3), 2, None, bind_addr).await?;
 
-while let Some(response) = responses.next().await {
-    println!("{:?}", response?);
+    while let Some(response) = responses.next().await {
+        println!("{:?}", response?);
+    }
 }
 ```
 

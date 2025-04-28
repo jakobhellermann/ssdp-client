@@ -4,7 +4,6 @@ use futures_core::stream::Stream;
 use genawaiter::sync::{Co, Gen};
 use std::{collections::HashMap, net::SocketAddr, time::Duration};
 use tokio::net::UdpSocket;
-
 const INSUFFICIENT_BUFFER_MSG: &str = "buffer size too small, udp packets lost";
 const DEFAULT_SEARCH_TTL: u32 = 2;
 
@@ -67,14 +66,23 @@ pub async fn search(
     timeout: Duration,
     mx: usize,
     ttl: Option<u32>,
+    bind_addr: SocketAddr
 ) -> Result<impl Stream<Item = Result<SearchResponse, Error>>, Error> {
-    let bind_addr: SocketAddr = get_bind_addr().await?;
-    let broadcast_address: SocketAddr = ([239, 255, 255, 250], 1900).into();
+    let broadcast_address: SocketAddr = if bind_addr.is_ipv4() {
+        ([239, 255, 255, 250], 1900).into()
+    } else {
+        ([0xff02, 0, 0, 0, 0, 0, 0, 0xc], 1900).into()
+    };
 
-    let socket = UdpSocket::bind(&bind_addr).await?;
-    socket
-        .set_multicast_ttl_v4(ttl.unwrap_or(DEFAULT_SEARCH_TTL))
-        .ok();
+    let socket = UdpSocket::bind(&bind_addr).await.expect("error addr");
+    if bind_addr.is_ipv4() {
+        socket
+            .set_multicast_ttl_v4(ttl.unwrap_or(DEFAULT_SEARCH_TTL))
+            .ok();
+    } else {
+        socket.set_multicast_loop_v6(true).ok();
+        socket.set_ttl(ttl.unwrap_or(DEFAULT_SEARCH_TTL)).ok();
+    }
 
     let msg = format!(
         "M-SEARCH * HTTP/1.1\r
@@ -83,7 +91,7 @@ Man:\"ssdp:discover\"\r
 ST: {search_target}\r
 MX: {mx}\r\n\r\n"
     );
-    socket.send_to(msg.as_bytes(), &broadcast_address).await?;
+    socket.send_to(msg.as_bytes(), &broadcast_address).await.expect("msg");
 
     Ok(Gen::new(move |co| socket_stream(socket, timeout, co)))
 }
